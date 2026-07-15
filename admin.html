@@ -38,16 +38,18 @@
   }
   header .hbtn:hover{background:rgba(255,255,255,.22)}
 
-  main{max-width:760px;margin:0 auto;padding:28px 20px 80px}
+  main{max-width:900px;margin:0 auto;padding:28px 20px 80px}
 
   .card{background:#fff;border:1px solid #e3e7ef;border-radius:16px;padding:26px;box-shadow:0 8px 26px rgba(16,24,40,.06);margin-bottom:22px}
-  .card h2{margin:0 0 4px;font-size:17px;font-weight:700;color:#2a3350}
-  .card .desc{margin:0 0 20px;font-size:13.5px;color:#71798b;font-weight:500;line-height:1.5}
+  .card-head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .card h2{margin:0;font-size:17px;font-weight:700;color:#2a3350}
+  .card .desc{margin:4px 0 20px;font-size:13.5px;color:#71798b;font-weight:500;line-height:1.5}
+  .card-head .spacer{margin-left:auto}
 
   label{display:block;font-size:13px;font-weight:600;color:#33405a;margin-bottom:7px}
   .field-row{display:flex;gap:10px;flex-wrap:wrap}
-  input[type=email],input.link{
-    flex:1;min-width:220px;padding:12px 14px;border-radius:10px;border:1px solid #dde1e9;background:#fff;
+  input[type=email],input[type=text],input[type=password]{
+    flex:1;min-width:200px;padding:12px 14px;border-radius:10px;border:1px solid #dde1e9;background:#fff;
     color:#1a2233;font-size:14.5px;font-family:inherit;transition:border-color .18s,box-shadow .18s;
   }
   input:focus{outline:none;border-color:#5566cc;box-shadow:0 0 0 3px rgba(85,102,204,.15)}
@@ -60,8 +62,11 @@
   }
   .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 26px rgba(59,63,143,.38)}
   .btn:disabled{opacity:.7;cursor:default}
-  .btn.ghost{background:#eef1f6;color:#3b3f8f;box-shadow:none;border:1px solid #d7dce6;padding:10px 14px;font-size:13px}
-  .btn.ghost:hover{background:#e4e9f2;transform:none}
+  .btn.ghost{background:#eef1f6;color:#3b3f8f;box-shadow:none;border:1px solid #d7dce6;padding:9px 13px;font-size:13px}
+  .btn.ghost:hover{background:#e4e9f2;transform:none;box-shadow:none}
+  .btn.sm{padding:7px 11px;font-size:12.5px;border-radius:8px}
+  .btn.danger{background:#fff;color:#b3261e;border:1px solid #f0c3bd;box-shadow:none}
+  .btn.danger:hover{background:#fdecea;transform:none;box-shadow:none}
 
   .msg{margin:16px 0 0;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:500;line-height:1.45;display:none}
   .msg.show{display:block}
@@ -74,17 +79,34 @@
   .result .rlabel{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a93a6;margin-bottom:8px}
   .result .hint{margin:10px 0 0;font-size:12.5px;color:#71798b;line-height:1.5}
 
-  .invites{list-style:none;margin:0;padding:0}
-  .invites li{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #eef1f6;flex-wrap:wrap}
-  .invites li:first-child{border-top:none}
-  .invites .em{font-weight:600;font-size:14px;color:#2a3350;min-width:180px;flex:1;word-break:break-all}
-  .invites .empty{color:#9aa2b1;font-size:13.5px;font-weight:500;padding:6px 0}
-  .copied{color:#1c7a44;font-size:12.5px;font-weight:600}
+  /* tabela de usuários */
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{ text-align:left;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8a93a6;padding:0 12px 10px;border-bottom:1px solid #eef1f6;white-space:nowrap}
+  td{padding:13px 12px;border-bottom:1px solid #f2f4f8;vertical-align:middle}
+  td.email{font-weight:600;color:#2a3350;word-break:break-all}
+  tr:last-child td{border-bottom:none}
+  .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .badge.ativo{background:#e3f4ec;color:#1a915f}
+  .badge.pend{background:#fbf1dc;color:#a06f0a}
+  .badge.admin{background:#e7edfb;color:#3b3f8f}
+  .muted{color:#9aa2b1;font-size:13px}
+  .loading{padding:16px 0;color:#8a93a6;font-size:14px;font-weight:500}
 
   .warnbar{background:#fff7e6;border:1px solid #f3dca0;color:#8a6412;border-radius:12px;padding:13px 16px;font-size:13px;font-weight:500;line-height:1.5;margin-bottom:22px;display:none}
   .warnbar.show{display:block}
 
-  @media (max-width:560px){ main{padding:20px 14px 60px} .card{padding:20px} }
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(15,28,45,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;box-shadow:0 30px 70px rgba(6,26,50,.35)}
+  .modal h3{margin:0 0 6px;font-size:17px;font-weight:700;color:#2a3350}
+  .modal p.sub{margin:0 0 18px;font-size:13.5px;color:#71798b;font-weight:500;line-height:1.5;word-break:break-all}
+  .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+  .copied{color:#1c7a44;font-size:12.5px;font-weight:600}
+
+  @media (max-width:560px){ main{padding:20px 14px 60px} .card{padding:20px} th:nth-child(3),td:nth-child(3){display:none} }
 </style>
 </head>
 <body>
@@ -92,7 +114,7 @@
     <div class="logo"><img src="assets/logo-hktc.webp" alt="HKTC"></div>
     <div class="titles">
       <h1>Painel do administrador</h1>
-      <div class="sub">Convites de acesso · HKTC Financeiro</div>
+      <div class="sub">Convites e usuários · HKTC Financeiro</div>
     </div>
     <div class="spacer"></div>
     <span class="who" id="who"></span>
@@ -105,14 +127,13 @@
       Supabase não está configurado (auth.js). O painel funciona só depois de configurar o login.
     </div>
 
+    <!-- Convidar -->
     <div class="card">
       <h2>Convidar novo usuário</h2>
       <p class="desc">
-        Digite o e-mail da pessoa e gere um link de convite. Envie o link para ela
-        (WhatsApp, e-mail, etc.); ao abrir, ela define a própria senha e ganha acesso.
-        O convite é individual e vinculado a esse e-mail.
+        Gere um link de convite e envie para a pessoa. Ao abrir, ela define a própria senha
+        e ganha acesso. O convite é individual e vinculado ao e-mail.
       </p>
-
       <form id="formInvite" novalidate>
         <label for="inviteEmail">E-mail do convidado</label>
         <div class="field-row">
@@ -120,109 +141,251 @@
           <button type="submit" class="btn" id="btnInvite">Gerar link de convite</button>
         </div>
       </form>
-
       <div class="msg" id="msg" role="alert" aria-live="polite"></div>
-
       <div class="result" id="result">
         <div class="rlabel">Link de convite</div>
         <div class="field-row">
-          <input class="link" id="linkOut" type="text" readonly>
+          <input id="linkOut" type="text" readonly>
           <button type="button" class="btn ghost" id="btnCopy">Copiar</button>
         </div>
         <p class="hint" id="resultHint"></p>
       </div>
     </div>
 
+    <!-- Usuários -->
     <div class="card">
-      <h2>Convites gerados nesta sessão</h2>
-      <p class="desc">Registro temporário (some ao recarregar). Cada link fica salvo no Supabase até ser usado.</p>
-      <ul class="invites" id="inviteList">
-        <li class="empty" id="listEmpty">Nenhum convite gerado ainda.</li>
-      </ul>
+      <div class="card-head">
+        <h2>Usuários</h2>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="btnReload">↻ Atualizar</button>
+      </div>
+      <p class="desc">
+        Por segurança, senhas não podem ser exibidas (ficam criptografadas). Se alguém perder
+        o acesso, use <b>Redefinir senha</b> para criar uma nova, ou <b>Reenviar</b> o link.
+      </p>
+      <div class="msg" id="msgUsers" role="alert" aria-live="polite"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>E-mail</th><th>Status</th><th>Último acesso</th><th></th></tr>
+          </thead>
+          <tbody id="userRows">
+            <tr><td colspan="4" class="loading">Carregando usuários…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </main>
+
+  <!-- Modal genérico -->
+  <div class="overlay" id="overlay">
+    <div class="modal" id="modal"></div>
+  </div>
 
   <script>
   (function () {
     "use strict";
     var A = window.HKTCAuth;
     var $ = function (id) { return document.getElementById(id); };
+    var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c];
+    }); };
 
-    var msg = $("msg"), result = $("result"), linkOut = $("linkOut"),
-        list = $("inviteList"), listEmpty = $("listEmpty");
-
-    // Cabeçalho
     if (A && A.currentEmail()) $("who").textContent = A.currentEmail();
     $("btnApp").addEventListener("click", function () { location.href = A.APP_PAGE; });
     $("btnSair").addEventListener("click", function () { A.signOut(); });
+    if (!A || !A.isConfigured()) $("warnConfig").classList.add("show");
 
-    if (!A || !A.isConfigured()) { $("warnConfig").classList.add("show"); }
-
-    function showMsg(kind, text) { msg.className = "msg show " + kind; msg.textContent = text; }
-    function clearMsg() { msg.className = "msg"; msg.textContent = ""; }
-
-    function busy(on) {
-      var b = $("btnInvite");
-      if (on) { b.dataset.t = b.textContent; b.textContent = "Gerando…"; b.disabled = true; }
-      else { if (b.dataset.t) b.textContent = b.dataset.t; b.disabled = false; }
+    // ---------- utilidades ----------
+    function showMsg(el, kind, text) { el.className = "msg show " + kind; el.textContent = text; }
+    function clearMsg(el) { el.className = "msg"; el.textContent = ""; }
+    function fmtDate(s) {
+      if (!s) return "—";
+      try { var d = new Date(s); return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }
+      catch (_) { return "—"; }
     }
-
     function copy(text, onDone) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(onDone, function () { fallback(); });
-      } else { fallback(); }
+        navigator.clipboard.writeText(text).then(onDone, fallback);
+      } else fallback();
       function fallback() {
-        var ta = document.createElement("textarea");
-        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        var ta = document.createElement("textarea"); ta.value = text;
+        ta.style.position = "fixed"; ta.style.opacity = "0";
         document.body.appendChild(ta); ta.select();
         try { document.execCommand("copy"); onDone(); } catch (_) {}
         document.body.removeChild(ta);
       }
     }
-
-    function addToList(email, link) {
-      listEmpty.style.display = "none";
-      var li = document.createElement("li");
-      var em = document.createElement("span"); em.className = "em"; em.textContent = email;
-      var btn = document.createElement("button"); btn.className = "btn ghost"; btn.textContent = "Copiar link";
-      var ok = document.createElement("span"); ok.className = "copied"; ok.style.display = "none"; ok.textContent = "✓ copiado";
-      btn.addEventListener("click", function () {
-        copy(link, function () { ok.style.display = "inline"; setTimeout(function(){ ok.style.display="none"; }, 1800); });
-      });
-      li.appendChild(em); li.appendChild(btn); li.appendChild(ok);
-      list.insertBefore(li, list.firstChild);
+    function randomPass(len) {
+      var chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      var arr = new Uint32Array(len || 12); crypto.getRandomValues(arr);
+      var out = ""; for (var i=0;i<arr.length;i++) out += chars[arr[i] % chars.length];
+      return out;
+    }
+    function friendly(err) {
+      var m = (err && err.message) ? err.message : "Ocorreu um erro.";
+      if (err && err.status === 401) return "Sua sessão expirou. Entre novamente.";
+      if (/Failed to fetch|NetworkError/i.test(m)) return "Não foi possível conectar à função. Ela está publicada no Supabase?";
+      return m;
     }
 
+    // ---------- modal ----------
+    var overlay = $("overlay"), modal = $("modal");
+    function openModal(html) { modal.innerHTML = html; overlay.classList.add("show"); }
+    function closeModal() { overlay.classList.remove("show"); modal.innerHTML = ""; }
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
+
+    // ---------- convidar ----------
+    function busyInvite(on) {
+      var b = $("btnInvite");
+      if (on) { b.dataset.t = b.textContent; b.textContent = "Gerando…"; b.disabled = true; }
+      else { if (b.dataset.t) b.textContent = b.dataset.t; b.disabled = false; }
+    }
     $("btnCopy").addEventListener("click", function () {
-      copy(linkOut.value, function () {
-        var b = $("btnCopy"); var t = b.textContent; b.textContent = "✓ Copiado";
+      copy($("linkOut").value, function () {
+        var b = $("btnCopy"), t = b.textContent; b.textContent = "✓ Copiado";
         setTimeout(function(){ b.textContent = t; }, 1600);
       });
     });
-
     $("formInvite").addEventListener("submit", function (e) {
       e.preventDefault();
-      clearMsg(); result.classList.remove("show");
-      if (!A || !A.isConfigured()) { showMsg("error", "Supabase não configurado (auth.js)."); return; }
+      clearMsg($("msg")); $("result").classList.remove("show");
+      if (!A || !A.isConfigured()) { showMsg($("msg"), "error", "Supabase não configurado."); return; }
       var email = $("inviteEmail").value.trim();
-      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg("error", "Informe um e-mail válido."); return; }
-      busy(true);
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg($("msg"), "error", "Informe um e-mail válido."); return; }
+      busyInvite(true);
       A.inviteUser(email).then(function (data) {
-        busy(false);
-        linkOut.value = data.action_link;
-        result.classList.add("show");
-        $("resultHint").textContent = "Envie este link para " + data.email + ". Ao abrir, a pessoa define a senha e entra no sistema.";
-        addToList(data.email, data.action_link);
+        busyInvite(false);
+        $("linkOut").value = data.action_link; $("result").classList.add("show");
+        $("resultHint").textContent = "Envie este link para " + data.email + ". Ao abrir, a pessoa define a senha e entra.";
         $("inviteEmail").value = "";
-        showMsg("ok", "Convite gerado para " + data.email + ".");
-      }).catch(function (err) {
-        busy(false);
-        var m = err && err.message ? err.message : "Não foi possível gerar o convite.";
-        if (err && err.status === 401) m = "Sua sessão expirou. Entre novamente.";
-        if (/Failed to fetch|NetworkError/i.test(m)) m = "Não foi possível conectar à função de convite. Ela já foi publicada no Supabase?";
-        showMsg("error", m);
-      });
+        showMsg($("msg"), "ok", "Convite gerado para " + data.email + ".");
+        loadUsers();
+      }).catch(function (err) { busyInvite(false); showMsg($("msg"), "error", friendly(err)); });
     });
+
+    // ---------- lista de usuários ----------
+    function statusBadge(u) {
+      if (u.is_admin) return '<span class="badge admin">Admin</span>';
+      if (u.email_confirmed_at || u.last_sign_in_at) return '<span class="badge ativo">Ativo</span>';
+      return '<span class="badge pend">Convidado (pendente)</span>';
+    }
+    function loadUsers() {
+      clearMsg($("msgUsers"));
+      var tb = $("userRows");
+      tb.innerHTML = '<tr><td colspan="4" class="loading">Carregando usuários…</td></tr>';
+      if (!A || !A.isConfigured()) { tb.innerHTML = '<tr><td colspan="4" class="muted">Configure o Supabase para listar usuários.</td></tr>'; return; }
+      A.listUsers().then(function (data) {
+        var users = (data && data.users) || [];
+        if (!users.length) { tb.innerHTML = '<tr><td colspan="4" class="muted">Nenhum usuário ainda.</td></tr>'; return; }
+        tb.innerHTML = "";
+        users.forEach(function (u) {
+          var tr = document.createElement("tr");
+          tr.innerHTML =
+            '<td class="email">' + esc(u.email) + '</td>' +
+            '<td>' + statusBadge(u) + '</td>' +
+            '<td class="muted">' + fmtDate(u.last_sign_in_at) + '</td>' +
+            '<td><div class="acts"></div></td>';
+          var acts = tr.querySelector(".acts");
+          acts.appendChild(mkBtn("Redefinir senha", "ghost sm", function () { openReset(u); }));
+          acts.appendChild(mkBtn("Reenviar", "ghost sm", function () { doResend(u); }));
+          if (!u.is_admin) acts.appendChild(mkBtn("Remover", "danger sm", function () { openDelete(u); }));
+          tb.appendChild(tr);
+        });
+      }).catch(function (err) {
+        tb.innerHTML = '<tr><td colspan="4" class="muted">Não foi possível carregar.</td></tr>';
+        showMsg($("msgUsers"), "error", friendly(err));
+      });
+    }
+    function mkBtn(label, cls, onClick) {
+      var b = document.createElement("button"); b.className = "btn " + cls; b.textContent = label;
+      b.addEventListener("click", onClick); return b;
+    }
+    $("btnReload").addEventListener("click", loadUsers);
+
+    // ---------- redefinir senha ----------
+    function openReset(u) {
+      openModal(
+        '<h3>Redefinir senha</h3>' +
+        '<p class="sub">' + esc(u.email) + '</p>' +
+        '<label for="mPass">Nova senha</label>' +
+        '<div class="field-row">' +
+          '<input id="mPass" type="text" placeholder="mínimo 6 caracteres" autocomplete="off">' +
+          '<button type="button" class="btn ghost" id="mGen">Gerar</button>' +
+        '</div>' +
+        '<div class="msg" id="mMsg"></div>' +
+        '<div class="actions">' +
+          '<button type="button" class="btn ghost" id="mCancel">Cancelar</button>' +
+          '<button type="button" class="btn" id="mSave">Salvar senha</button>' +
+        '</div>'
+      );
+      $("mGen").addEventListener("click", function () { $("mPass").value = randomPass(12); });
+      $("mCancel").addEventListener("click", closeModal);
+      $("mSave").addEventListener("click", function () {
+        var pw = $("mPass").value;
+        var mm = $("mMsg");
+        if (pw.length < 6) { showMsg(mm, "error", "A senha deve ter ao menos 6 caracteres."); return; }
+        var save = $("mSave"); save.disabled = true; save.textContent = "Salvando…";
+        A.resetUserPassword(u.id, pw).then(function () {
+          openModal(
+            '<h3>Senha redefinida ✓</h3>' +
+            '<p class="sub">Repasse estes dados para ' + esc(u.email) + ' (ela pode trocar depois):</p>' +
+            '<label>E-mail</label><div class="field-row"><input type="text" readonly value="' + esc(u.email) + '"></div>' +
+            '<label style="margin-top:12px">Senha</label>' +
+            '<div class="field-row"><input id="mShowPass" type="text" readonly value="' + esc(pw) + '">' +
+            '<button type="button" class="btn ghost" id="mCopyPass">Copiar</button></div>' +
+            '<div class="actions"><button type="button" class="btn" id="mClose">Fechar</button></div>'
+          );
+          $("mCopyPass").addEventListener("click", function () {
+            copy(pw, function () { var b=$("mCopyPass"),t=b.textContent; b.textContent="✓"; setTimeout(function(){b.textContent=t;},1500); });
+          });
+          $("mClose").addEventListener("click", closeModal);
+        }).catch(function (err) {
+          save.disabled = false; save.textContent = "Salvar senha";
+          showMsg(mm, "error", friendly(err));
+        });
+      });
+    }
+
+    // ---------- reenviar ----------
+    function doResend(u) {
+      A.resendInvite(u.email).then(function (data) {
+        openModal(
+          '<h3>Link de acesso gerado</h3>' +
+          '<p class="sub">Envie para ' + esc(u.email) + '. Ao abrir, a pessoa define a senha.</p>' +
+          '<div class="field-row"><input id="mLink" type="text" readonly value="' + esc(data.action_link) + '">' +
+          '<button type="button" class="btn ghost" id="mCopyLink">Copiar</button></div>' +
+          '<div class="actions"><button type="button" class="btn" id="mClose">Fechar</button></div>'
+        );
+        $("mCopyLink").addEventListener("click", function () {
+          copy(data.action_link, function () { var b=$("mCopyLink"),t=b.textContent; b.textContent="✓ Copiado"; setTimeout(function(){b.textContent=t;},1500); });
+        });
+        $("mClose").addEventListener("click", closeModal);
+      }).catch(function (err) { showMsg($("msgUsers"), "error", friendly(err)); });
+    }
+
+    // ---------- remover ----------
+    function openDelete(u) {
+      openModal(
+        '<h3>Remover acesso</h3>' +
+        '<p class="sub">Tem certeza que deseja remover <b>' + esc(u.email) + '</b>? Essa pessoa perde o acesso ao sistema. Não dá para desfazer.</p>' +
+        '<div class="msg" id="mMsg"></div>' +
+        '<div class="actions">' +
+          '<button type="button" class="btn ghost" id="mCancel">Cancelar</button>' +
+          '<button type="button" class="btn danger" id="mDel">Remover</button>' +
+        '</div>'
+      );
+      $("mCancel").addEventListener("click", closeModal);
+      $("mDel").addEventListener("click", function () {
+        var del = $("mDel"); del.disabled = true; del.textContent = "Removendo…";
+        A.deleteUser(u.id).then(function () { closeModal(); loadUsers(); showMsg($("msgUsers"), "ok", "Acesso de " + u.email + " removido."); })
+          .catch(function (err) { del.disabled = false; del.textContent = "Remover"; showMsg($("mMsg"), "error", friendly(err)); });
+      });
+    }
+
+    // ---------- boot ----------
+    loadUsers();
   })();
   </script>
 </body>

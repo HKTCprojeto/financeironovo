@@ -185,8 +185,9 @@
     return true;
   }
 
-  // Gera um link de convite chamando a Edge Function (que usa a service_role).
-  function inviteUser(email, redirectTo) {
+  // Chamada genérica à Edge Function de administração (usa a service_role no
+  // servidor). Todas as ações passam por aqui, sempre com o token do admin.
+  function adminCall(payload) {
     var s = getSession();
     if (!isConfigured()) return Promise.reject(new Error("Supabase não configurado."));
     if (!s || !s.access_token) return Promise.reject(new Error("Sessão expirada. Entre novamente."));
@@ -197,10 +198,7 @@
         "apikey": SUPABASE_ANON_KEY,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        email: email,
-        redirectTo: redirectTo || (location.origin + LOGIN_PAGE)
-      })
+      body: JSON.stringify(payload || {})
     }).then(function (res) {
       return res.json().then(function (data) {
         if (!res.ok) {
@@ -213,6 +211,29 @@
         return {};
       });
     });
+  }
+
+  var DEFAULT_REDIRECT = function () { return location.origin + LOGIN_PAGE; };
+
+  // Gera um link de convite para um novo usuário.
+  function inviteUser(email, redirectTo) {
+    return adminCall({ action: "invite", email: email, redirectTo: redirectTo || DEFAULT_REDIRECT() });
+  }
+  // Lista os usuários (sem dados sensíveis — nunca traz senha).
+  function listUsers() {
+    return adminCall({ action: "list" });
+  }
+  // Define uma NOVA senha para um usuário (a antiga não é revelada — é hash).
+  function resetUserPassword(id, password) {
+    return adminCall({ action: "reset_password", id: id, password: password });
+  }
+  // Reenvia acesso: gera um novo link para o usuário definir/redefinir a senha.
+  function resendInvite(email, redirectTo) {
+    return adminCall({ action: "resend", email: email, redirectTo: redirectTo || DEFAULT_REDIRECT() });
+  }
+  // Remove o acesso de um usuário (exclui do Supabase).
+  function deleteUser(id) {
+    return adminCall({ action: "delete", id: id });
   }
 
   global.HKTCAuth = {
@@ -234,6 +255,10 @@
     isAdmin: isAdmin,
     guardAdmin: guardAdmin,
     inviteUser: inviteUser,
+    listUsers: listUsers,
+    resetUserPassword: resetUserPassword,
+    resendInvite: resendInvite,
+    deleteUser: deleteUser,
     LOGIN_PAGE: LOGIN_PAGE,
     APP_PAGE: APP_PAGE,
     ADMIN_PAGE: ADMIN_PAGE
