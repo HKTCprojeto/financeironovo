@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Trava de acesso (padrão do time, via Supabase). Roda antes do app para evitar flash. -->
+<script src="auth.js"></script>
+<script>if(window.HKTCAuth) HKTCAuth.guardApp();</script>
 </head>
 <body>
 <title>HKTC · Financeiro</title>
@@ -290,6 +293,7 @@
       </div>
       <button class="btn" id="btnConfig">⚙︎ Configurações</button>
       <button class="btn icon-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
+      <button class="btn" id="btnSair" title="Sair" aria-label="Sair">Sair</button>
     </div>
   </div>
 </header>
@@ -1286,6 +1290,21 @@
   applyTema();
   renderAll();
 })();
+</script>
+<script>
+  // Botão "Sair": encerra a sessão e volta para o login.
+  (function(){
+    var b = document.getElementById("btnSair");
+    if(!b) return;
+    if(window.HKTCAuth && HKTCAuth.isConfigured()){
+      var s = HKTCAuth.getSession();
+      if(s && s.user && s.user.email) b.title = "Sair (" + s.user.email + ")";
+      b.addEventListener("click", function(){ HKTCAuth.signOut(); });
+    } else {
+      // Login não configurado ainda: esconde o botão para não confundir.
+      b.style.display = "none";
+    }
+  })();
 </script>
 </body>
 </html>

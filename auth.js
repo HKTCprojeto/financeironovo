@@ -1,0 +1,176 @@
+/* ============================================================
+   HKTC · Financeiro — Autenticação (padrão do time, via Supabase)
+   ------------------------------------------------------------
+   Mesmo padrão do sistema Severus: login por e-mail/senha usando
+   Supabase Auth. Não precisa de backend próprio — as chamadas vão
+   direto para a API REST de auth do Supabase.
+
+   >>> PREENCHA ESTAS DUAS LINHAS com os dados do SEU projeto Supabase
+       (Dashboard → Project Settings → API):
+         - Project URL          → SUPABASE_URL
+         - anon / public key     → SUPABASE_ANON_KEY  (é pública, pode ficar no front)
+   ============================================================ */
+(function (global) {
+  "use strict";
+
+  var SUPABASE_URL      = "https://utowspmmukczjinwgfdv.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0b3dzcG1tdWtjemppbndnZmR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwNjEzNTMsImV4cCI6MjA5OTYzNzM1M30.yl_EVey3Fr-LdFJIYAZDQTHt3DxLn9kidO8nn9Tw24Y";
+
+  var SESSION_KEY = "hktc:fin:session";
+  var LOGIN_PAGE  = "/login";
+  var APP_PAGE    = "/";
+
+  function isConfigured() {
+    return !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
+  }
+
+  // ---------- armazenamento da sessão ----------
+  function getSession() {
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); }
+    catch (_) { return null; }
+  }
+  function setSession(s) {
+    // Normaliza a resposta do Supabase para o formato que guardamos.
+    var expiresAt = s.expires_at || (s.expires_in ? Math.floor(Date.now() / 1000) + s.expires_in : 0);
+    var norm = {
+      access_token:  s.access_token,
+      refresh_token: s.refresh_token,
+      expires_at:    expiresAt,
+      user: s.user ? { id: s.user.id, email: s.user.email } : null
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(norm));
+    return norm;
+  }
+  function clearSession() { localStorage.removeItem(SESSION_KEY); }
+
+  function nowSec() { return Math.floor(Date.now() / 1000); }
+  function hasSession() {
+    var s = getSession();
+    return !!(s && s.refresh_token);
+  }
+  function accessValid() {
+    var s = getSession();
+    return !!(s && s.access_token && s.expires_at && s.expires_at > nowSec() + 30);
+  }
+
+  // ---------- chamadas à API de auth ----------
+  function authFetch(path, opts) {
+    opts = opts || {};
+    var headers = Object.assign({
+      "apikey": SUPABASE_ANON_KEY,
+      "Content-Type": "application/json"
+    }, opts.headers || {});
+    return fetch(SUPABASE_URL + "/auth/v1" + path, {
+      method: opts.method || "GET",
+      headers: headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) {
+          var msg = (data && (data.error_description || data.msg || data.message || data.error)) || ("Erro " + res.status);
+          var err = new Error(msg); err.status = res.status; err.data = data; throw err;
+        }
+        return data;
+      }, function () {
+        if (!res.ok) throw new Error("Erro " + res.status);
+        return {};
+      });
+    });
+  }
+
+  function signIn(email, password) {
+    return authFetch("/token?grant_type=password", {
+      method: "POST",
+      body: { email: email, password: password }
+    }).then(function (data) { return setSession(data); });
+  }
+
+  function signUp(email, password, redirectTo) {
+    var body = { email: email, password: password };
+    if (redirectTo) body.options = { email_redirect_to: redirectTo };
+    return authFetch("/signup", { method: "POST", body: body }).then(function (data) {
+      // Se a confirmação de e-mail estiver desligada, o Supabase já devolve a sessão.
+      if (data && data.access_token) setSession(data);
+      return data;
+    });
+  }
+
+  function resetPassword(email, redirectTo) {
+    var body = { email: email };
+    if (redirectTo) body.redirect_to = redirectTo;
+    return authFetch("/recover", { method: "POST", body: body });
+  }
+
+  // Define nova senha (usado após clicar no link de recuperação do e-mail).
+  function updatePassword(newPassword, accessToken) {
+    return authFetch("/user", {
+      method: "PUT",
+      headers: { "Authorization": "Bearer " + accessToken },
+      body: { password: newPassword }
+    });
+  }
+
+  function refresh() {
+    var s = getSession();
+    if (!s || !s.refresh_token) return Promise.reject(new Error("sem sessão"));
+    return authFetch("/token?grant_type=refresh_token", {
+      method: "POST",
+      body: { refresh_token: s.refresh_token }
+    }).then(function (data) { return setSession(data); });
+  }
+
+  function getUser() {
+    var s = getSession();
+    if (!s || !s.access_token) return Promise.reject(new Error("sem sessão"));
+    return authFetch("/user", { headers: { "Authorization": "Bearer " + s.access_token } });
+  }
+
+  function signOut() {
+    var s = getSession();
+    var done = function () { clearSession(); location.replace(LOGIN_PAGE); };
+    if (isConfigured() && s && s.access_token) {
+      authFetch("/logout", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + s.access_token }
+      }).then(done, done);
+    } else { done(); }
+  }
+
+  // ---------- trava de acesso do app ----------
+  // Uso no index.html. Se não houver sessão, manda para o login.
+  // Se o access_token expirou mas há refresh_token, tenta renovar em segundo plano.
+  function guardApp() {
+    if (!isConfigured()) {
+      console.warn("[auth] Supabase não configurado em auth.js — trava de login desativada.");
+      return;
+    }
+    if (!hasSession()) { location.replace(LOGIN_PAGE); return; }
+    if (!accessValid()) {
+      refresh().catch(function () { clearSession(); location.replace(LOGIN_PAGE); });
+    }
+  }
+
+  // Uso no login.html: se já está logado, pula direto para o app.
+  function redirectIfLoggedIn() {
+    if (isConfigured() && hasSession()) location.replace(APP_PAGE);
+  }
+
+  global.HKTCAuth = {
+    isConfigured: isConfigured,
+    getSession: getSession,
+    clearSession: clearSession,
+    hasSession: hasSession,
+    accessValid: accessValid,
+    signIn: signIn,
+    signUp: signUp,
+    resetPassword: resetPassword,
+    updatePassword: updatePassword,
+    refresh: refresh,
+    getUser: getUser,
+    signOut: signOut,
+    guardApp: guardApp,
+    redirectIfLoggedIn: redirectIfLoggedIn,
+    LOGIN_PAGE: LOGIN_PAGE,
+    APP_PAGE: APP_PAGE
+  };
+})(window);

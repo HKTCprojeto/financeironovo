@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HKTC Portal · Financeiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    min-height:100vh;width:100%;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;background:linear-gradient(180deg,#1b4a7a,#0f2f52);
+  }
+  a{color:#3f4fb0;text-decoration:none}
+  a:hover{color:#2f3d94}
+
+  .bg{position:absolute;inset:0;z-index:0}
+  .bg img{width:100%;height:100%;object-fit:cover;display:block}
+  .bg .overlay{position:absolute;inset:0;background:rgba(12,40,72,.28);pointer-events:none}
+
+  .card{
+    position:relative;z-index:4;width:100%;max-width:445px;margin:0 24px;
+    background:#f4f6f8;border-radius:20px;padding:44px 44px 30px;
+    box-shadow:0 40px 90px rgba(6,26,50,.4);
+  }
+  .logo-wrap{display:flex;justify-content:center;margin-bottom:18px}
+  .logo-wrap .box{width:210px;height:98px;position:relative}
+  .logo-wrap img{width:100%;height:100%;object-fit:contain;display:block}
+
+  h1{margin:0 0 6px;text-align:center;font-size:26px;font-weight:700;color:#2a3350;letter-spacing:.2px}
+  .subtitle{margin:0 0 30px;text-align:center;font-size:15px;color:#8a93a6;font-weight:500}
+
+  label{display:block;font-size:13.5px;font-weight:600;color:#33405a;margin-bottom:8px}
+  input{
+    width:100%;margin-bottom:22px;padding:13px 15px;border-radius:11px;border:1px solid #dde1e9;
+    background:#fff;color:#1a2233;font-size:15px;font-family:inherit;
+    transition:border-color .18s,box-shadow .18s;
+  }
+  input:focus{outline:none;border-color:#5566cc;box-shadow:0 0 0 3px rgba(85,102,204,.15)}
+  input::placeholder{color:#9aa2b1}
+  input:disabled{opacity:.6}
+
+  .row-right{text-align:right;margin-bottom:22px}
+  .row-right button.linklike{
+    background:none;border:none;padding:0;cursor:pointer;font-family:inherit;
+    font-size:13px;font-weight:500;color:#3f4fb0;
+  }
+  .row-right button.linklike:hover{color:#2f3d94}
+
+  .btn-primary{
+    width:100%;padding:14px;border:none;border-radius:11px;
+    background:linear-gradient(90deg,#3b3f8f,#7a7fd6);color:#fff;font-size:15px;font-weight:700;
+    font-family:inherit;cursor:pointer;box-shadow:0 10px 26px rgba(59,63,143,.32);
+    transition:transform .12s,box-shadow .18s,opacity .18s;
+  }
+  .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 32px rgba(59,63,143,.42)}
+  .btn-primary:disabled{opacity:.7;cursor:default}
+
+  .foot{margin:20px 0 0;text-align:center}
+  .foot button.linklike{
+    background:none;border:none;padding:0;cursor:pointer;font-family:inherit;
+    font-size:14px;font-weight:600;color:#3f4fb0;
+  }
+  .foot button.linklike:hover{color:#2f3d94}
+  .foot .muted{font-size:14px;color:#8a93a6;font-weight:500}
+
+  .msg{margin:0 0 20px;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:500;line-height:1.4;display:none}
+  .msg.show{display:block}
+  .msg.error{background:#fdecea;color:#b3261e;border:1px solid #f7cdc8}
+  .msg.ok{background:#e7f5ec;color:#1c7a44;border:1px solid #bfe6cd}
+  .msg.info{background:#eaf1fb;color:#2f4a80;border:1px solid #cbdcf5}
+
+  .avatar{
+    position:absolute;right:26px;bottom:26px;z-index:6;width:56px;height:56px;border-radius:50%;
+    overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.8);
+  }
+  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .hidden{display:none !important}
+
+  @media (max-width:480px){
+    .card{padding:36px 26px 24px}
+    .avatar{right:16px;bottom:16px;width:46px;height:46px}
+  }
+</style>
+</head>
+<body>
+  <div class="bg">
+    <img src="assets/login-bg.webp" alt="" aria-hidden="true">
+    <div class="overlay"></div>
+  </div>
+
+  <main class="card" role="main">
+    <div class="logo-wrap">
+      <div class="box"><img src="assets/logo-hktc.webp" alt="HKTC Do Brasil S/A"></div>
+    </div>
+
+    <h1>HKTC Portal</h1>
+    <p class="subtitle" id="subtitle">Sistema Financeiro</p>
+
+    <div class="msg" id="msg" role="alert" aria-live="polite"></div>
+
+    <!-- LOGIN -->
+    <form id="formLogin" novalidate>
+      <label for="loginEmail">E-mail</label>
+      <input id="loginEmail" type="email" autocomplete="email" placeholder="seu@email.com" required>
+
+      <label for="loginPass">Senha</label>
+      <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" required>
+
+      <div class="row-right">
+        <button type="button" class="linklike" id="toForgot">Esqueceu a senha?</button>
+      </div>
+
+      <button type="submit" class="btn-primary" id="btnLogin">Entrar</button>
+    </form>
+
+    <!-- RECUPERAR SENHA -->
+    <form id="formForgot" class="hidden" novalidate>
+      <label for="fgEmail">E-mail</label>
+      <input id="fgEmail" type="email" autocomplete="email" placeholder="seu@email.com" required>
+
+      <button type="submit" class="btn-primary" id="btnForgot">Enviar link de recuperação</button>
+
+      <p class="foot">
+        <button type="button" class="linklike" id="backToLogin2">Voltar ao login</button>
+      </p>
+    </form>
+
+    <!-- NOVA SENHA (após clicar no link do e-mail) -->
+    <form id="formReset" class="hidden" novalidate>
+      <label for="rsPass">Nova senha</label>
+      <input id="rsPass" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" required>
+
+      <label for="rsPass2">Confirmar nova senha</label>
+      <input id="rsPass2" type="password" autocomplete="new-password" placeholder="••••••••" required>
+
+      <button type="submit" class="btn-primary" id="btnReset">Salvar nova senha</button>
+    </form>
+  </main>
+
+  <div class="avatar" aria-hidden="true">
+    <img src="assets/avatar.webp" alt="">
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var A = window.HKTCAuth;
+    var $ = function (id) { return document.getElementById(id); };
+
+    var forms = {
+      login:  $("formLogin"),
+      forgot: $("formForgot"),
+      reset:  $("formReset")
+    };
+    var subtitle = $("subtitle");
+    var msg = $("msg");
+
+    var SUBTITLES = {
+      login:  "Sistema Financeiro",
+      forgot: "Recuperar acesso",
+      reset:  "Definir nova senha"
+    };
+
+    function showMsg(kind, text) {
+      msg.className = "msg show " + kind;
+      msg.textContent = text;
+    }
+    function clearMsg() { msg.className = "msg"; msg.textContent = ""; }
+
+    function show(mode) {
+      Object.keys(forms).forEach(function (k) {
+        forms[k].classList.toggle("hidden", k !== mode);
+      });
+      subtitle.textContent = SUBTITLES[mode] || SUBTITLES.login;
+      clearMsg();
+    }
+
+    function busy(btn, on, labelBusy) {
+      if (!btn) return;
+      if (on) {
+        btn.dataset.label = btn.textContent;
+        btn.textContent = labelBusy || "Aguarde…";
+        btn.disabled = true;
+      } else {
+        if (btn.dataset.label) btn.textContent = btn.dataset.label;
+        btn.disabled = false;
+      }
+    }
+
+    // Traduz as mensagens de erro mais comuns do Supabase.
+    function friendly(err) {
+      var m = (err && err.message) || "";
+      if (/Invalid login credentials/i.test(m)) return "E-mail ou senha incorretos.";
+      if (/Email not confirmed/i.test(m)) return "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.";
+      if (/User already registered/i.test(m)) return "Já existe uma conta com este e-mail.";
+      if (/Password should be at least/i.test(m)) return "A senha deve ter pelo menos 6 caracteres.";
+      if (/rate limit|too many/i.test(m)) return "Muitas tentativas. Aguarde um instante e tente de novo.";
+      if (/Failed to fetch|NetworkError/i.test(m)) return "Não foi possível conectar. Verifique sua conexão.";
+      return m || "Ocorreu um erro. Tente novamente.";
+    }
+
+    function guardConfigured() {
+      if (!A.isConfigured()) {
+        showMsg("info", "Login ainda não configurado: preencha SUPABASE_URL e SUPABASE_ANON_KEY em auth.js.");
+        return false;
+      }
+      return true;
+    }
+
+    // ---------- navegação entre telas ----------
+    $("toForgot").addEventListener("click", function () { show("forgot"); });
+    $("backToLogin2").addEventListener("click", function () { show("login"); });
+
+    // ---------- login ----------
+    forms.login.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!guardConfigured()) return;
+      clearMsg();
+      var email = $("loginEmail").value.trim();
+      var pass = $("loginPass").value;
+      if (!email || !pass) { showMsg("error", "Preencha e-mail e senha."); return; }
+      busy($("btnLogin"), true, "Entrando…");
+      A.signIn(email, pass).then(function () {
+        location.replace(A.APP_PAGE);
+      }).catch(function (err) {
+        busy($("btnLogin"), false);
+        showMsg("error", friendly(err));
+      });
+    });
+
+    // ---------- recuperar senha ----------
+    forms.forgot.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!guardConfigured()) return;
+      clearMsg();
+      var email = $("fgEmail").value.trim();
+      if (!email) { showMsg("error", "Informe seu e-mail."); return; }
+      busy($("btnForgot"), true, "Enviando…");
+      A.resetPassword(email, location.origin + A.LOGIN_PAGE).then(function () {
+        busy($("btnForgot"), false);
+        show("login");
+        showMsg("ok", "Se existir uma conta com este e-mail, enviamos um link de recuperação.");
+      }).catch(function (err) {
+        busy($("btnForgot"), false);
+        // Não revelamos se o e-mail existe; só mostra erro em falhas técnicas.
+        showMsg("error", friendly(err));
+      });
+    });
+
+    // ---------- nova senha (fluxo de recuperação) ----------
+    var recoveryToken = null;
+    forms.reset.addEventListener("submit", function (e) {
+      e.preventDefault();
+      clearMsg();
+      var p1 = $("rsPass").value, p2 = $("rsPass2").value;
+      if (p1.length < 6) { showMsg("error", "A senha deve ter pelo menos 6 caracteres."); return; }
+      if (p1 !== p2) { showMsg("error", "As senhas não conferem."); return; }
+      if (!recoveryToken) { showMsg("error", "Link de recuperação inválido ou expirado."); return; }
+      busy($("btnReset"), true, "Salvando…");
+      A.updatePassword(p1, recoveryToken).then(function () {
+        A.clearSession();
+        show("login");
+        showMsg("ok", "Senha alterada com sucesso. Faça login com a nova senha.");
+      }).catch(function (err) {
+        busy($("btnReset"), false);
+        showMsg("error", friendly(err));
+      });
+    });
+
+    // ---------- boot ----------
+    // Detecta retorno do link de recuperação: Supabase devolve tokens no hash.
+    function handleHash() {
+      var hash = location.hash.replace(/^#/, "");
+      if (!hash) return false;
+      var params = new URLSearchParams(hash);
+      var type = params.get("type");
+      var at = params.get("access_token");
+      if (type === "recovery" && at) {
+        recoveryToken = at;
+        history.replaceState(null, "", location.pathname + location.search);
+        show("reset");
+        showMsg("info", "Defina sua nova senha.");
+        return true;
+      }
+      if (params.get("error_description")) {
+        history.replaceState(null, "", location.pathname + location.search);
+        show("login");
+        showMsg("error", params.get("error_description").replace(/\+/g, " "));
+        return true;
+      }
+      return false;
+    }
+
+    if (!handleHash()) {
+      // Se já está logado, vai direto pro app.
+      A.redirectIfLoggedIn();
+      show("login");
+    }
+  })();
+  </script>
+</body>
+</html>
