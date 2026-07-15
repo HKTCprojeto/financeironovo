@@ -1,0 +1,8 @@
+# Configuração das Edge Functions do projeto financeiro.
+#
+# admin-invite: a verificação de JWT automática fica DESLIGADA de propósito.
+# Motivo: o navegador envia um preflight OPTIONS (sem token) antes do POST;
+# com verify_jwt ligado, esse preflight seria rejeitado e o CORS quebraria.
+# A checagem "é o admin?" é feita manualmente dentro da própria função.
+[functions.admin-invite]
+verify_jwt = false
