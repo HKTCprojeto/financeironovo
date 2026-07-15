@@ -63,9 +63,9 @@
   html,body{margin:0}
   body{
     font-family:var(--font-sans); background:var(--bg); color:var(--ink);
-    -webkit-font-smoothing:antialiased; line-height:1.45;
-    font-size:15px;
+    -webkit-font-smoothing:antialiased; line-height:1.45; font-size:15px;
   }
+  [inert]{ pointer-events:none; }
   .num{font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em}
   .wrap{max-width:1120px; margin:0 auto; padding:0 20px 96px}
   h1,h2,h3{margin:0; text-wrap:balance; font-weight:650}
@@ -75,7 +75,6 @@
   .muted{color:var(--ink-2)}
   .hidden{display:none !important}
 
-  /* header */
   header.app{
     position:sticky; top:0; z-index:40; background:color-mix(in srgb, var(--bg) 88%, transparent);
     backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--border);
@@ -109,7 +108,6 @@
 
   :focus-visible{outline:2.5px solid var(--accent); outline-offset:2px; border-radius:6px}
 
-  /* banners */
   .banner{display:flex; gap:12px; align-items:center; padding:12px 16px; border-radius:12px; margin-top:16px; font-size:13.5px}
   .banner.info{background:var(--accent-soft); border:1px solid color-mix(in srgb,var(--accent) 25%,var(--border))}
   .banner.warn{background:var(--warn-soft); border:1px solid color-mix(in srgb,var(--warn) 35%,var(--border))}
@@ -120,7 +118,6 @@
   .block-head h2{font-size:15px; letter-spacing:-.01em}
   .block-head .hint{font-size:12.5px; color:var(--ink-2); margin-left:auto}
 
-  /* KPI bar */
   .kpi{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
     padding:22px 24px; display:grid; grid-template-columns:1.35fr 1fr 1fr; gap:26px;
@@ -145,7 +142,6 @@
   .pill.warn{color:var(--warn); background:var(--warn-soft)}
   .pill.danger{color:var(--danger); background:var(--danger-soft)}
 
-  /* limit cards */
   .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:14px}
   .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 17px; box-shadow:var(--shadow); position:relative}
   .card.state-danger{border-color:color-mix(in srgb,var(--danger) 45%,var(--border))}
@@ -166,7 +162,6 @@
   .card .rest{font-size:12.5px; font-weight:600}
   .rest.ok{color:var(--ok)} .rest.warn{color:var(--warn)} .rest.danger{color:var(--danger)}
 
-  /* launch form */
   .launch{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 20px}
   .launch .form-grid{display:grid; grid-template-columns: 180px 1fr 150px; gap:14px}
   .field{display:flex; flex-direction:column; gap:6px}
@@ -195,7 +190,6 @@
   .inline-error{color:var(--danger); font-size:13px; font-weight:600; display:none; align-items:center; gap:7px}
   .inline-error.show{display:inline-flex}
 
-  /* history */
   .filters{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px}
   .filters .search{flex:1; min-width:180px}
   .hist{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden}
@@ -217,15 +211,9 @@
   .empty{padding:48px 24px; text-align:center; color:var(--ink-2)}
   .empty .big-ico{font-size:30px; opacity:.5; margin-bottom:8px}
 
-  /* distribution */
-  .dist{display:flex; height:14px; border-radius:99px; overflow:hidden; background:var(--surface-2); margin-bottom:10px}
-  .dist > span{height:100%}
-  .legend{display:flex; flex-wrap:wrap; gap:12px}
-  .legend .li{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-2)}
-
-  /* modal */
   .scrim{position:fixed; inset:0; background:rgba(10,15,22,.55); backdrop-filter:blur(3px); z-index:60; display:grid; place-items:center; padding:20px}
   .modal{background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow-lg); width:100%; max-width:560px; max-height:88vh; overflow:auto}
+  .modal:focus{outline:none}
   .modal.lg{max-width:760px}
   .modal-head{display:flex; align-items:flex-start; gap:12px; padding:20px 22px 0}
   .modal-head .m-ico{width:40px; height:40px; border-radius:11px; display:grid; place-items:center; flex:none}
@@ -256,7 +244,6 @@
   .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
   .help{font-size:11.5px; color:var(--ink-3); margin-top:4px}
 
-  /* toast */
   .toasts{position:fixed; right:20px; bottom:20px; z-index:80; display:flex; flex-direction:column; gap:10px; max-width:360px}
   .toast{background:var(--surface); border:1px solid var(--border-strong); border-left-width:4px; border-radius:12px; box-shadow:var(--shadow-lg); padding:13px 15px; display:flex; gap:11px; align-items:flex-start; animation:slidein .22s ease}
   .toast.ok{border-left-color:var(--ok)} .toast.warn{border-left-color:var(--warn)} .toast.danger{border-left-color:var(--danger)} .toast.info{border-left-color:var(--accent)}
@@ -286,7 +273,7 @@
   }
 </style>
 
-<header class="app">
+<header class="app" id="appHeader">
   <div class="app-inner">
     <div class="brand">
       <div class="logo">HK</div>
@@ -307,19 +294,18 @@
   </div>
 </header>
 
-<div class="wrap">
+<div class="wrap" id="appWrap">
   <div id="storageBanner" class="banner warn hidden">
     <span>⚠️</span>
     <span class="grow"><b>Seus dados não estão sendo salvos neste navegador.</b> O modo anônimo ou o navegador bloqueou o armazenamento local. As alterações valem só até fechar a aba.</span>
   </div>
 
-  <div id="exemploBanner" class="banner info hidden">
-    <span>💡</span>
-    <span class="grow">Você está vendo <b>dados de exemplo</b> para conhecer o sistema. Quando quiser começar do zero, limpe tudo.</span>
-    <button class="btn sm" id="btnLimparExemplo">Limpar dados de exemplo</button>
+  <div id="onboardBanner" class="banner info hidden">
+    <span>👋</span>
+    <span class="grow">Bem-vindo ao controle financeiro da HKTC. Comece definindo seus <b>limites e travas</b> e lançando suas despesas reais.</span>
+    <button class="btn sm" id="btnOnboardCfg">Definir limites</button>
   </div>
 
-  <!-- KPI -->
   <section class="block" style="margin-top:20px">
     <div class="kpi">
       <div class="lead">
@@ -341,7 +327,6 @@
     </div>
   </section>
 
-  <!-- limit cards -->
   <section class="block">
     <div class="block-head">
       <h2>Limites e travas</h2>
@@ -350,7 +335,6 @@
     <div class="cards" id="cards"></div>
   </section>
 
-  <!-- launch form -->
   <section class="block">
     <div class="block-head"><h2 id="launchTitle">Lançar despesa</h2><span class="hint">Todo gasto é fixo ou variável e passa pelas travas</span></div>
     <form class="launch" id="formDespesa" autocomplete="off">
@@ -384,7 +368,6 @@
     </form>
   </section>
 
-  <!-- history -->
   <section class="block">
     <div class="block-head"><h2>Histórico do mês</h2><span class="hint" id="histHint"></span></div>
     <div class="filters">
@@ -409,6 +392,7 @@
 "use strict";
 (function(){
   var STORAGE_KEY = "hktc:financeiro:state";
+  var CORRUPT_KEY = "hktc:financeiro:corrupt-backup";
   var SCHEMA = 1;
   var MAX_CENTS = 99999999999; // R$ 999.999.999,99
   var fmtBRL = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
@@ -424,26 +408,48 @@
   function clamp(n,a,b){ return Math.max(a,Math.min(b,n)); }
 
   function formatCents(c){ return fmtBRL.format((c||0)/100); }
+  function brl(c){ return (c/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  // parse robusto de moeda BRL -> centavos inteiros (ou null). Corrigido: rejeita milhar malformado,
+  // >2 casas decimais e entradas sem dígitos.
   function parseBRLToCents(input){
     if(input==null) return null;
     var s = String(input).replace(/ /g," ").replace(/R\$/gi,"").trim().replace(/\s/g,"");
     if(!s) return null;
     if(!/^[0-9.,]+$/.test(s)) return null;
-    var hasComma = s.indexOf(",")>=0, hasDot = s.indexOf(".")>=0, norm;
-    if(hasComma && hasDot){ norm = s.replace(/\./g,"").replace(",","."); }
-    else if(hasComma){ norm = s.replace(",","."); }
-    else if(hasDot){
+    var hasComma = s.indexOf(",")>=0, hasDot = s.indexOf(".")>=0, norm, dec;
+    if(hasComma && hasDot){
+      if((s.match(/,/g)||[]).length>1) return null;      // mais de uma vírgula
+      dec = s.split(",")[1];
+      if(dec && dec.length>2) return null;               // >2 casas decimais
+      norm = s.replace(/\./g,"").replace(",",".");
+    } else if(hasComma){
+      if((s.match(/,/g)||[]).length>1) return null;
+      dec = s.split(",")[1];
+      if(dec && dec.length>2) return null;               // >2 casas decimais
+      norm = s.replace(",",".");
+    } else if(hasDot){
       var parts = s.split(".");
-      if(parts.length===2 && parts[1].length!==3) norm = s;      // 12.50 / 12.5 -> decimal
-      else norm = s.replace(/\./g,"");                            // 1.234 / 1.234.567 -> milhar
-    } else { norm = s; }
-    if((norm.match(/\./g)||[]).length>1) return null;
+      if(parts.length===2 && parts[1].length!==3){
+        if(parts[1].length>2) return null;               // 12.9999 -> inválido
+        norm = s;                                         // 12.50 / 12.5 -> decimal
+      } else {
+        // milhar: 1º grupo com 1-3 dígitos, demais grupos exatamente 3 dígitos
+        if(parts[0].length<1 || parts[0].length>3) return null;
+        for(var i=1;i<parts.length;i++){ if(parts[i].length!==3) return null; }
+        norm = s.replace(/\./g,"");
+      }
+    } else {
+      norm = s;
+    }
+    if(!/[0-9]/.test(norm)) return null;                 // ex.: '...' -> null (não 0)
     var num = Number(norm);
     if(!Number.isFinite(num) || num<0) return null;
     var cents = Math.round(num*100);
     if(!Number.isInteger(cents) || cents<0 || cents>MAX_CENTS) return null;
     return cents;
   }
+
   function mesLabel(ym){
     var p = ym.split("-"); var d = new Date(Number(p[0]), Number(p[1])-1, 1);
     return mesFmt.format(d);
@@ -453,7 +459,7 @@
     return ymLocal(d);
   }
 
-  // safe DOM builder
+  // safe DOM builder — dados do usuário sempre via 'text' (textContent), nunca innerHTML
   function h(tag, attrs){
     var e = document.createElement(tag), i;
     if(attrs) for(var k in attrs){
@@ -476,66 +482,68 @@
   }
   function $(id){ return document.getElementById(id); }
 
-  // ---------- state / persistence ----------
-  var storageOK = true;
+  // ---------- state / persistência ----------
+  var storageOK = true;     // armazenamento disponível (definido no boot)
+  var quotaWarned = false;  // já avisou sobre cota nesta rodada
+  var saveTimer = null;
+
   function testStorage(){
     try{ localStorage.setItem("__hktc_t__","1"); localStorage.removeItem("__hktc_t__"); return true; }
     catch(e){ return false; }
   }
-  var saveTimer=null;
-  function save(){
-    if(!storageOK) return;
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(function(){
-      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-      catch(e){ storageOK=false; $("storageBanner").classList.remove("hidden"); toast("danger","Não foi possível salvar (armazenamento cheio). Faça um backup em Configurações."); }
-    }, 150);
+  function backupCorrupt(raw){ try{ localStorage.setItem(CORRUPT_KEY, raw); }catch(_){ } }
+  function doSave(){
+    if(!storageOK) return; // modo memória (navegador bloqueou): não tenta, não spamma
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if(quotaWarned){ quotaWarned=false; } // recuperou espaço
+    }catch(e){
+      // NÃO desliga storageOK permanentemente: tentará de novo no próximo save
+      if(!quotaWarned){ quotaWarned=true; toast("danger","Não foi possível salvar (armazenamento cheio). Exclua itens ou faça um backup em Configurações."); }
+    }
   }
-  function seedState(){
+  function save(){ clearTimeout(saveTimer); saveTimer = setTimeout(doSave, 150); }
+  function flushSave(){ if(saveTimer){ clearTimeout(saveTimer); saveTimer=null; } doSave(); }
+
+  function seedCategorias(){
     var C = [
       {id:uid(), nome:"Moradia", natureza:"fixa", cor:"#2f6fb0"},
       {id:uid(), nome:"Salários", natureza:"fixa", cor:"#3b4e8c"},
       {id:uid(), nome:"Internet & Assinaturas", natureza:"fixa", cor:"#4b8ca6"},
+      {id:uid(), nome:"Impostos & Taxas", natureza:"fixa", cor:"#5a6b8c"},
       {id:uid(), nome:"Mercado & Copa", natureza:"variavel", cor:"#c77d2e"},
       {id:uid(), nome:"Transporte", natureza:"variavel", cor:"#b5563f"},
       {id:uid(), nome:"Materiais", natureza:"variavel", cor:"#7a54a3"},
       {id:uid(), nome:"Frete", natureza:"variavel", cor:"#567d46"},
       {id:uid(), nome:"Marketing", natureza:"variavel", cor:"#a64c8a"}
     ];
-    var byName={}; C.forEach(function(c){ c.tetoPadraoCentavos=null; c.arquivada=false; byName[c.nome]=c.id; });
-    var m = mesAtual();
-    function desp(nome,cat,cents,forcada,just){
-      var c = C.find(function(x){return x.id===byName[cat];});
-      return {id:uid(), descricao:nome, amountCents:cents, tipo:c.natureza, categoriaId:byName[cat], mesRef:m, data:m+"-05",
-        forcada:!!forcada, justificativa:just||"", excluido:false, criadoEm:nowISO(), atualizadoEm:nowISO()};
-    }
-    var despesas = [
-      desp("Aluguel do escritório","Moradia",320000),
-      desp("Folha de pagamento","Salários",980000),
-      desp("Link dedicado + softwares","Internet & Assinaturas",45000),
-      desp("Compras de copa e limpeza","Mercado & Copa",185000),
-      desp("Combustível da frota","Transporte",62000),
-      desp("Insumos de produção","Materiais",240000),
-      desp("Envios para clientes","Frete",38000),
-      desp("Anúncios e mídia","Marketing",55000),
-      desp("Confraternização (evento único)","Mercado & Copa",30000,true,"Evento único aprovado pela diretoria")
-    ];
-    var limites = [
-      {id:uid(), escopo:"totalGeral", alvo:null, limiteCentavos:2500000, modo:"hard", limiarHardPct:null, alertasPct:[80,100], atualizadoEm:nowISO()},
-      {id:uid(), escopo:"totalFixas", alvo:null, limiteCentavos:1600000, modo:"hard", limiarHardPct:null, alertasPct:[80,100], atualizadoEm:nowISO()},
-      {id:uid(), escopo:"totalVariaveis", alvo:null, limiteCentavos:900000, modo:"soft", limiarHardPct:120, alertasPct:[80,100], atualizadoEm:nowISO()},
-      {id:uid(), escopo:"categoria", alvo:byName["Moradia"], limiteCentavos:350000, modo:"hard", limiarHardPct:null, alertasPct:[80,100], atualizadoEm:nowISO()},
-      {id:uid(), escopo:"categoria", alvo:byName["Mercado & Copa"], limiteCentavos:200000, modo:"soft", limiarHardPct:130, alertasPct:[80,100], atualizadoEm:nowISO()},
-      {id:uid(), escopo:"categoria", alvo:byName["Materiais"], limiteCentavos:250000, modo:"hard", limiarHardPct:null, alertasPct:[80,100], atualizadoEm:nowISO()}
-    ];
+    C.forEach(function(c){ c.tetoPadraoCentavos=null; c.arquivada=false; });
+    return C;
+  }
+  // Estado inicial: SEM valores fabricados. Categorias (rótulos, sem valor) como ponto de partida editável.
+  function seedState(){
     return {
       schemaVersion:SCHEMA,
-      meta:{ ultimoMes:m, diaFechamento:1, criadoEm:nowISO(), moeda:"BRL", locale:"pt-BR", tema:"auto", exemplo:true },
-      categorias:C, despesas:despesas, limites:limites, logAuditoria:[]
+      meta:{ ultimoMes:mesAtual(), diaFechamento:1, criadoEm:nowISO(), moeda:"BRL", locale:"pt-BR", tema:"auto" },
+      categorias:seedCategorias(), despesas:[], limites:[], logAuditoria:[]
+    };
+  }
+  // Estado 100% vazio (usado por "Apagar tudo e recomeçar")
+  function emptyState(){
+    var tema = (typeof state!=="undefined" && state.meta && state.meta.tema) ? state.meta.tema : "auto";
+    return {
+      schemaVersion:SCHEMA,
+      meta:{ ultimoMes:mesAtual(), diaFechamento:1, criadoEm:nowISO(), moeda:"BRL", locale:"pt-BR", tema:tema },
+      categorias:[], despesas:[], limites:[], logAuditoria:[]
     };
   }
   function validate(st){
-    return st && typeof st==="object" && Array.isArray(st.categorias) && Array.isArray(st.despesas) && Array.isArray(st.limites) && st.meta;
+    if(!st || typeof st!=="object" || Array.isArray(st)) return false;
+    if(!Array.isArray(st.categorias) || !Array.isArray(st.despesas) || !Array.isArray(st.limites)) return false;
+    if(!st.meta || typeof st.meta!=="object" || Array.isArray(st.meta)) return false;
+    if(!st.despesas.every(function(d){ return d && typeof d==="object" && typeof d.amountCents==="number" && Number.isFinite(d.amountCents); })) return false;
+    if(!st.limites.every(function(l){ return l && typeof l==="object" && typeof l.limiteCentavos==="number" && Number.isFinite(l.limiteCentavos); })) return false;
+    return true;
   }
   function load(){
     storageOK = testStorage();
@@ -544,23 +552,31 @@
     if(raw==null) return seedState();
     var st;
     try{ st = JSON.parse(raw); }
-    catch(e){ try{ localStorage.setItem("hktc:financeiro:corrupt-backup", raw); }catch(_){ } return seedState(); }
-    if(!validate(st)) return seedState();
-    // rollover leve: o "reset" acontece pelo filtro de mês; só avançamos o marcador.
-    var m = mesAtual();
-    if(st.meta.ultimoMes && st.meta.ultimoMes < m){ st.meta.ultimoMes = m; }
-    if(!st.meta.ultimoMes) st.meta.ultimoMes = m;
+    catch(e){ backupCorrupt(raw); return seedState(); }
+    if(!validate(st)){ backupCorrupt(raw); return seedState(); }
+    // versão futura/incompatível: preserva o bruto e reinicializa (não corrompe silenciosamente)
+    if(typeof st.schemaVersion==="number" && st.schemaVersion>SCHEMA){ backupCorrupt(raw); return seedState(); }
+    st.schemaVersion = SCHEMA;
     if(!Array.isArray(st.logAuditoria)) st.logAuditoria=[];
+    // reset mensal: o gasto é sempre a soma do mês vigente, então a virada zera automaticamente.
+    var m = mesAtual();
+    if(st.meta.ultimoMes && st.meta.ultimoMes < m) st.meta.ultimoMes = m;
+    if(!st.meta.ultimoMes) st.meta.ultimoMes = m;
     return st;
   }
 
-  var state = load();
-  var view = { mes: mesAtual(), catSel: null, editId: null, aumentarLimId:null };
+  var state;
+  try{ state = load(); }
+  catch(e){ try{ backupCorrupt(localStorage.getItem(STORAGE_KEY)||""); }catch(_){ } state = seedState(); }
+
+  var view = { mes: mesAtual(), catSel: null, editId: null };
 
   function catById(id){ return state.categorias.find(function(c){return c.id===id;}); }
   function logAudit(tipo, detalhe, antes, depois, ref){
     state.logAuditoria.push({id:uid(), tipo:tipo, timestamp:nowISO(), entidadeRef:ref||null, valorAntesCentavos:antes==null?null:antes, valorDepoisCentavos:depois==null?null:depois, detalhe:detalhe});
   }
+  function snapAll(){ return {d:JSON.parse(JSON.stringify(state.despesas)), l:JSON.parse(JSON.stringify(state.limites)), a:JSON.parse(JSON.stringify(state.logAuditoria))}; }
+  function restoreAll(s){ state.despesas=s.d; state.limites=s.l; state.logAuditoria=s.a; }
 
   // ---------- núcleo de cálculo ----------
   function despesasMes(ym){ return state.despesas.filter(function(d){ return !d.excluido && d.mesRef===ym; }); }
@@ -589,21 +605,31 @@
     if(lim.escopo==="totalGeral") return "Total geral do mês";
     return lim.escopo;
   }
-  // motor de travas — retorna bloqueios/avisos ordenados
+  // motor de travas — projetado = gasto(excluindo a própria despesa em edição) + valorNovo
   function avaliarTravas(ctx){
-    // ctx: {categoriaId, natureza, valorNovo, despesaId, ym}
     var bloqueios=[], avisos=[];
     state.limites.forEach(function(lim){
       if(!limiteSeAplica(lim, ctx.categoriaId, ctx.natureza)) return;
       var gasto = gastoEscopo(lim.escopo, lim.alvo, ctx.ym, ctx.despesaId||null);
       var projetado = gasto + ctx.valorNovo;
       if(projetado <= lim.limiteCentavos) return; // igualdade exata é permitida
-      var folga = Math.max(0, lim.limiteCentavos - gasto);
-      var info = {lim:lim, gasto:gasto, projetado:projetado, folga:folga, excedente:projetado - lim.limiteCentavos};
-      if(lim.modo==="hard"){ bloqueios.push(info); }
-      else {
-        var escalado = (lim.limiarHardPct!=null) && (projetado > lim.limiteCentavos*(lim.limiarHardPct/100));
-        if(escalado){ info.escalado=true; bloqueios.push(info); } else avisos.push(info);
+      var info = {lim:lim, gasto:gasto, projetado:projetado,
+        folga:Math.max(0, lim.limiteCentavos - gasto), excedente:projetado - lim.limiteCentavos,
+        limiteEfetivo:lim.limiteCentavos, escalado:false};
+      if(lim.modo==="hard"){
+        bloqueios.push(info);
+      } else {
+        // soft: entre o teto e o limiar => aviso; acima do limiar => vira bloqueio (hard)
+        var limiarHard = (lim.limiarHardPct!=null) ? lim.limiteCentavos*(lim.limiarHardPct/100) : null;
+        if(limiarHard!=null && projetado > limiarHard){
+          info.escalado=true;
+          info.limiteEfetivo=limiarHard;
+          info.folga=Math.max(0, limiarHard - gasto);
+          info.excedente=projetado - limiarHard;
+          bloqueios.push(info);
+        } else {
+          avisos.push(info);
+        }
       }
     });
     bloqueios.sort(function(a,b){return a.folga-b.folga;});
@@ -611,7 +637,7 @@
     var maxCabe = bloqueios.length ? Math.min.apply(null, bloqueios.map(function(b){return b.folga;})) : null;
     return {bloqueia:bloqueios.length>0, bloqueios:bloqueios, avisos:avisos, maxCabe:maxCabe};
   }
-  // estado do semáforo de um limite
+  // estado do semáforo — teto exato NÃO é estouro (coerente com a trava que permite a igualdade)
   function estadoLimite(lim, ym){
     var gasto = gastoEscopo(lim.escopo, lim.alvo, ym, null);
     var teto = lim.limiteCentavos;
@@ -619,7 +645,7 @@
     var menorAlerta = (lim.alertasPct && lim.alertasPct.length) ? Math.min.apply(null, lim.alertasPct) : 80;
     var estado;
     if(teto===0){ estado = gasto>0 ? "danger" : "ok"; }
-    else if(gasto >= teto) estado = "danger";
+    else if(gasto > teto) estado = "danger";
     else if(pct >= menorAlerta) estado = "warn";
     else estado = "ok";
     return {gasto:gasto, teto:teto, pct:pct, estado:estado, resta:teto-gasto};
@@ -633,9 +659,8 @@
     kpiVar:$("kpiVar"), kpiVarBar:$("kpiVarBar"), kpiVarSub:$("kpiVarSub"),
     cardsHint:$("cardsHint"), histHint:$("histHint"), fFiltroCat:$("fFiltroCat")
   };
-
   function fillClass(estado){ return estado==="danger"?"fill-danger":estado==="warn"?"fill-warn":"fill-ok"; }
-
+  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||"#888"; }
   function renderMes(){ el.mesLbl.textContent = mesLabel(view.mes); }
 
   function renderKPIs(){
@@ -646,13 +671,11 @@
     var limGeral = state.limites.find(function(l){return l.escopo==="totalGeral";});
     var limFix = state.limites.find(function(l){return l.escopo==="totalFixas";});
     var limVar = state.limites.find(function(l){return l.escopo==="totalVariaveis";});
-    // limite total: totalGeral, senão soma das categorias
+    // teto total coerente: totalGeral, ou soma dos dois tetos de natureza (que cobrem todo o gasto).
     var tetoTotal = null;
     if(limGeral) tetoTotal = limGeral.limiteCentavos;
-    else {
-      var cats = state.limites.filter(function(l){return l.escopo==="categoria";});
-      if(cats.length) tetoTotal = cats.reduce(function(a,l){return a+l.limiteCentavos;},0);
-    }
+    else if(limFix && limVar) tetoTotal = limFix.limiteCentavos + limVar.limiteCentavos;
+
     if(tetoTotal!=null){
       var disp = tetoTotal - gTotal;
       el.kpiLeadLbl.textContent = "Disponível este mês";
@@ -663,14 +686,13 @@
       el.kpiLeadLbl.textContent = "Total gasto no mês";
       el.kpiDisp.textContent = formatCents(gTotal);
       el.kpiDisp.className = "big num pos";
-      el.kpiDispSub.textContent = "Defina um limite total em Configurações para ver o disponível";
+      el.kpiDispSub.textContent = "Defina um limite total (ou de fixos e variáveis) em Configurações para ver o disponível";
     }
-    // status global = pior estado entre limites ativos
     var pior = "ok";
     state.limites.forEach(function(l){ var e=estadoLimite(l,ym).estado; if(e==="danger") pior="danger"; else if(e==="warn"&&pior!=="danger") pior="warn"; });
     var stTxt = pior==="danger"?"Estourado":pior==="warn"?"Atenção":"No controle";
     el.kpiStatusWrap.innerHTML="";
-    el.kpiStatusWrap.append(h("span",{class:"pill "+pior}, stTxt));
+    if(state.limites.length) el.kpiStatusWrap.append(h("span",{class:"pill "+pior}, stTxt));
 
     function cell(gasto, lim, barEl, valEl, subEl){
       valEl.textContent = formatCents(gasto);
@@ -698,6 +720,7 @@
       el.cards.append(h("div",{class:"empty",style:{gridColumn:"1/-1"}},
         h("div",{class:"big-ico"},"🎯"),
         h("div",{},"Nenhum limite definido ainda."),
+        h("div",{class:"muted",style:{marginTop:"4px",fontSize:"13px"}},"Crie limites por categoria, por natureza (fixos/variáveis) ou um total geral."),
         h("button",{class:"btn primary",style:{marginTop:"12px"},onclick:function(){openConfig("limites");}},"Definir limites e travas")
       ));
       el.cardsHint.textContent="";
@@ -710,7 +733,7 @@
       var cor = cat?cat.cor:(l.escopo==="totalFixas"?getVar("--fixa"):l.escopo==="totalVariaveis"?getVar("--variavel"):getVar("--accent"));
       var w = clamp(s.teto>0?(s.gasto*100/s.teto):(s.gasto>0?100:0),0,100);
       var pctTxt = s.teto>0? Math.round(s.gasto*100/s.teto)+"%" : (s.gasto>0?"∞":"0%");
-      var card = h("div",{class:"card state-"+s.estado},
+      el.cards.append(h("div",{class:"card state-"+s.estado},
         h("div",{class:"card-top"},
           h("span",{class:"dot",style:{background:cor}}),
           h("div",{style:{minWidth:0}},
@@ -728,11 +751,9 @@
           h("span",{class:"rest "+s.estado, text:(s.resta>=0?"Restam "+formatCents(s.resta):"Estourou em "+formatCents(-s.resta))}),
           h("span",{class:"num muted",style:{fontSize:"12px"},text:pctTxt})
         )
-      );
-      el.cards.append(card);
+      ));
     });
   }
-  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||"#888"; }
 
   function renderChips(){
     el.catChips.innerHTML="";
@@ -742,9 +763,8 @@
       return;
     }
     ativos.forEach(function(c){
-      var b = h("button",{type:"button",class:"chip"+(view.catSel===c.id?" active":""),dataset:{nat:c.natureza==="fixa"?"fixa":"var"},onclick:function(){ view.catSel=c.id; renderChips(); renderLive(); }},
-        h("span",{class:"dot",style:{background:c.cor||"#888"}}), c.nome);
-      el.catChips.append(b);
+      el.catChips.append(h("button",{type:"button",class:"chip"+(view.catSel===c.id?" active":""),dataset:{nat:c.natureza==="fixa"?"fixa":"var"},onclick:function(){ view.catSel=c.id; renderChips(); renderLive(); }},
+        h("span",{class:"dot",style:{background:c.cor||"#888"}}), c.nome));
     });
   }
 
@@ -759,8 +779,9 @@
     relevantes.slice(0,4).forEach(function(l){
       var gasto = gastoEscopo(l.escopo,l.alvo,ym, view.editId||null);
       var proj = gasto+val;
+      var menorAlerta = (l.alertasPct&&l.alertasPct.length)?Math.min.apply(null,l.alertasPct):80;
       var pct = l.limiteCentavos>0? clamp(proj*100/l.limiteCentavos,0,100):(proj>0?100:0);
-      var estado = l.limiteCentavos>0? (proj>l.limiteCentavos?"danger":(proj*100/l.limiteCentavos>=((l.alertasPct&&l.alertasPct.length)?Math.min.apply(null,l.alertasPct):80)?"warn":"ok")):(proj>0?"danger":"ok");
+      var estado = l.limiteCentavos>0? (proj>l.limiteCentavos?"danger":(proj*100/l.limiteCentavos>=menorAlerta?"warn":"ok")):(proj>0?"danger":"ok");
       var cor = estado==="danger"?getVar("--danger"):estado==="warn"?getVar("--warn"):getVar("--ok");
       box.append(h("span",{class:"li"},
         escopoLabel(l)+": ",
@@ -775,14 +796,15 @@
     var ym=view.mes;
     var busca=($("fBusca").value||"").toLowerCase().trim();
     var fNat=$("fFiltroNat").value, fCat=$("fFiltroCat").value;
-    var lista = despesasMes(ym).filter(function(d){
+    var doMes = despesasMes(ym);
+    var lista = doMes.filter(function(d){
       if(fNat && d.tipo!==fNat) return false;
       if(fCat && d.categoriaId!==fCat) return false;
       if(busca && (d.descricao||"").toLowerCase().indexOf(busca)<0) return false;
       return true;
     }).sort(function(a,b){ return (b.data||"").localeCompare(a.data||"") || (b.criadoEm||"").localeCompare(a.criadoEm||""); });
 
-    if(!despesasMes(ym).length){
+    if(!doMes.length){
       el.hist.append(h("div",{class:"empty"},
         h("div",{class:"big-ico"},"🧾"),
         h("div",{},"Nenhuma despesa lançada em "+mesLabel(ym)+"."),
@@ -798,7 +820,7 @@
     lista.forEach(function(d){
       totalFiltrado += d.amountCents;
       var cat=catById(d.categoriaId);
-      var row = h("div",{class:"row-exp"+(d.forcada?" forced":"")},
+      el.hist.append(h("div",{class:"row-exp"+(d.forcada?" forced":"")},
         h("span",{class:"date"}, (d.data||"").slice(8,10)+"/"+(d.data||"").slice(5,7)),
         h("div",{class:"desc"},
           h("span",{class:"d1",text:d.descricao||"(sem descrição)"}),
@@ -811,11 +833,10 @@
         ),
         h("span",{class:"val",text:formatCents(d.amountCents)}),
         h("div",{class:"row-acts"},
-          h("button",{title:"Editar",onclick:function(){startEdit(d.id);}},"✎"),
-          h("button",{title:"Excluir",onclick:function(){excluirDespesa(d.id);}},"🗑")
+          h("button",{title:"Editar","aria-label":"Editar",onclick:function(){startEdit(d.id);}},"✎"),
+          h("button",{title:"Excluir","aria-label":"Excluir",onclick:function(){excluirDespesa(d.id);}},"🗑")
         )
-      );
-      el.hist.append(row);
+      ));
     });
     if(lista.length){
       el.hist.append(h("div",{class:"hist-foot"},
@@ -823,7 +844,7 @@
         h("span",{}, "Total: ", h("b",{class:"num"},formatCents(totalFiltrado)))
       ));
     }
-    el.histHint.textContent = despesasMes(ym).length+" no mês";
+    el.histHint.textContent = doMes.length+" no mês";
   }
 
   function renderFiltroCat(){
@@ -833,19 +854,18 @@
     state.categorias.forEach(function(c){ el.fFiltroCat.append(h("option",{value:c.id, text:c.nome+(c.arquivada?" (arquivada)":"")})); });
     el.fFiltroCat.value=cur;
   }
-
-  function renderExemplo(){
-    $("exemploBanner").classList.toggle("hidden", !(state.meta && state.meta.exemplo));
+  function renderOnboard(){
+    var vazio = state.despesas.filter(function(d){return !d.excluido;}).length===0 && state.limites.length===0;
+    $("onboardBanner").classList.toggle("hidden", !vazio);
   }
-
   function renderAll(){
-    renderMes(); renderKPIs(); renderCards(); renderChips(); renderLive(); renderFiltroCat(); renderHist(); renderExemplo();
+    renderMes(); renderKPIs(); renderCards(); renderChips(); renderLive(); renderFiltroCat(); renderHist(); renderOnboard();
   }
 
   // ---------- toasts ----------
   function toast(kind, msg, undoFn){
     var t = h("div",{class:"toast "+kind},
-      h("div",{class:"t-txt"}, typeof msg==="string"?msg:msg),
+      h("div",{class:"t-txt"}, msg),
       undoFn?h("button",{class:"undo",onclick:function(){ undoFn(); t.remove(); }},"Desfazer"):null
     );
     $("toasts").append(t);
@@ -853,11 +873,10 @@
   }
 
   // ---------- commit / edição / exclusão ----------
-  function snapshotDespesas(){ return JSON.parse(JSON.stringify(state.despesas)); }
-
-  function commitDespesa(payload, forcada, justificativa){
-    var prev = snapshotDespesas();
-    if(view.editId){
+  function commitDespesa(payload, forcada, justificativa, preSnap){
+    var pre = preSnap || snapAll();
+    var wasEdit = !!view.editId;
+    if(wasEdit){
       var d = state.despesas.find(function(x){return x.id===view.editId;});
       if(d){
         d.descricao=payload.descricao; d.amountCents=payload.amountCents; d.categoriaId=payload.categoriaId;
@@ -866,23 +885,20 @@
         logAudit("EDICAO","Despesa editada: "+d.descricao, null, d.amountCents, d.id);
       }
     } else {
-      var nova = {id:uid(), descricao:payload.descricao, amountCents:payload.amountCents, tipo:payload.tipo,
+      state.despesas.push({id:uid(), descricao:payload.descricao, amountCents:payload.amountCents, tipo:payload.tipo,
         categoriaId:payload.categoriaId, mesRef:payload.mesRef, data:payload.data,
-        forcada:!!forcada, justificativa:forcada?justificativa:"", excluido:false, criadoEm:nowISO(), atualizadoEm:nowISO()};
-      state.despesas.push(nova);
+        forcada:!!forcada, justificativa:forcada?justificativa:"", excluido:false, criadoEm:nowISO(), atualizadoEm:nowISO()});
     }
     if(forcada) logAudit("OVERRIDE_SOFT","Lançado acima do limite (soft): "+payload.descricao+" — "+justificativa, null, payload.amountCents);
     save();
-    var wasEdit = !!view.editId;
     resetForm();
-    // se o lançamento é de outro mês, pula para ele
-    if(payload.mesRef!==view.mes){ view.mes=payload.mesRef; }
+    if(payload.mesRef!==view.mes) view.mes=payload.mesRef;
     renderAll();
     var extra = alertaPos(payload);
-    toast(extra.kind, (wasEdit?"Despesa atualizada":"Despesa lançada")+": "+formatCents(payload.amountCents)+(extra.msg?" · "+extra.msg:""), function(){ state.despesas=prev; save(); renderAll(); toast("info","Alteração desfeita."); });
+    toast(extra.kind, (wasEdit?"Despesa atualizada":"Despesa lançada")+": "+formatCents(payload.amountCents)+(extra.msg?" · "+extra.msg:""),
+      function(){ restoreAll(pre); save(); renderAll(); toast("info","Alteração desfeita."); });
   }
   function alertaPos(payload){
-    // avisa se algum limite aplicável entrou em warn/danger
     var pior="ok", nome="";
     state.limites.forEach(function(l){
       if(!limiteSeAplica(l,payload.categoriaId,payload.tipo)) return;
@@ -894,23 +910,22 @@
     if(pior==="warn") return {kind:"warn", msg:nome+" em zona de atenção"};
     return {kind:"ok", msg:""};
   }
-
   function startEdit(id){
     var d=state.despesas.find(function(x){return x.id===id;});
     if(!d) return;
     view.editId=id; view.catSel=d.categoriaId;
-    $("fValor").value = (d.amountCents/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+    $("fValor").value = brl(d.amountCents);
     $("fDesc").value = d.descricao||"";
     $("fData").value = d.data||hoje();
     $("launchTitle").textContent="Editar despesa";
     $("btnLancar").textContent="Salvar alterações";
     $("btnCancelEdit").classList.remove("hidden");
     renderChips(); renderLive();
-    document.getElementById("formDespesa").scrollIntoView({behavior:"smooth",block:"center"});
+    $("formDespesa").scrollIntoView({behavior:"smooth",block:"center"});
   }
   function resetForm(){
     view.editId=null; view.catSel=null;
-    var f=$("formDespesa"); f.reset();
+    $("formDespesa").reset();
     $("fData").value=hoje();
     $("launchTitle").textContent="Lançar despesa";
     $("btnLancar").textContent="Lançar despesa";
@@ -919,13 +934,12 @@
   }
   function excluirDespesa(id){
     var d=state.despesas.find(function(x){return x.id===id;}); if(!d) return;
-    var prev=snapshotDespesas();
+    var pre=snapAll();
     d.excluido=true; d.atualizadoEm=nowISO();
     logAudit("EXCLUSAO","Despesa excluída: "+d.descricao, d.amountCents, null, d.id);
     save(); if(view.editId===id) resetForm(); renderAll();
-    toast("info","Despesa excluída ("+formatCents(d.amountCents)+")", function(){ state.despesas=prev; save(); renderAll(); toast("info","Exclusão desfeita."); });
+    toast("info","Despesa excluída ("+formatCents(d.amountCents)+")", function(){ restoreAll(pre); save(); renderAll(); toast("info","Exclusão desfeita."); });
   }
-
   function showErro(msg){ $("valorErroTxt").textContent=msg; $("valorErro").classList.add("show"); }
   function hideErro(){ $("valorErro").classList.remove("show"); }
 
@@ -938,29 +952,45 @@
     if(!view.catSel){ showErro("Selecione uma categoria"); return; }
     var cat=catById(view.catSel); if(!cat){ showErro("Categoria inválida"); return; }
     var data=$("fData").value||hoje();
-    var mesRef=data.slice(0,7);
-    var payload={descricao:($("fDesc").value||"").trim().slice(0,200), amountCents:cents, tipo:cat.natureza, categoriaId:cat.id, data:data, mesRef:mesRef};
-    var av = avaliarTravas({categoriaId:cat.id, natureza:cat.natureza, valorNovo:cents, despesaId:view.editId||null, ym:mesRef});
+    var payload={descricao:($("fDesc").value||"").trim().slice(0,200), amountCents:cents, tipo:cat.natureza, categoriaId:cat.id, data:data, mesRef:data.slice(0,7)};
+    var av = avaliarTravas({categoriaId:cat.id, natureza:cat.natureza, valorNovo:cents, despesaId:view.editId||null, ym:payload.mesRef});
     if(av.bloqueia){ openTravaHard(payload, av); return; }
     if(av.avisos.length){ openTravaSoft(payload, av); return; }
     commitDespesa(payload, false, "");
   });
   $("fValor").addEventListener("input", function(){ hideErro(); renderLive(); });
-  $("fValor").addEventListener("blur", function(){
-    var c=parseBRLToCents(this.value);
-    if(c!=null) this.value=(c/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
-  });
+  $("fValor").addEventListener("blur", function(){ var c=parseBRLToCents(this.value); if(c!=null) this.value=brl(c); });
   $("btnCancelEdit").addEventListener("click", resetForm);
   $("fBusca").addEventListener("input", renderHist);
   $("fFiltroNat").addEventListener("change", renderHist);
   $("fFiltroCat").addEventListener("change", renderHist);
+  $("btnOnboardCfg").addEventListener("click", function(){ openConfig("limites"); });
 
-  // ---------- modais de trava ----------
-  function closeModal(){ $("modalRoot").innerHTML=""; }
-  function figuresGrid(av, payload){
-    var tight = av.bloqueios[0]||av.avisos[0];
+  // ---------- modais (com foco/aria) ----------
+  var lastFocused=null;
+  function setInert(on){
+    ["appHeader","appWrap"].forEach(function(id){ var e=$(id); if(!e) return; if(on) e.setAttribute("inert",""); else e.removeAttribute("inert"); });
+  }
+  function mountModal(scrim){
+    var already = !!$("modalRoot").querySelector(".modal");
+    if(!already) lastFocused = document.activeElement;
+    $("modalRoot").innerHTML=""; $("modalRoot").append(scrim);
+    setInert(true);
+    var modal = scrim.querySelector(".modal");
+    if(modal && !already){
+      var f = modal.querySelector('input,textarea,select,button');
+      (f||modal).focus();
+    }
+  }
+  function closeModal(){
+    $("modalRoot").innerHTML=""; setInert(false);
+    if(lastFocused && lastFocused.focus){ try{ lastFocused.focus(); }catch(_){ } }
+    lastFocused=null;
+  }
+  function figuresGrid(tight, payload){
+    var limMostrado = (tight.escalado && tight.limiteEfetivo!=null)? tight.limiteEfetivo : tight.lim.limiteCentavos;
     return h("div",{class:"trava-figures"},
-      h("div",{}, h("div",{class:"k"},"Limite de "+escopoLabel(tight.lim)), h("div",{class:"v num"},formatCents(tight.lim.limiteCentavos))),
+      h("div",{}, h("div",{class:"k"},"Limite de "+escopoLabel(tight.lim)), h("div",{class:"v num"},formatCents(limMostrado))),
       h("div",{}, h("div",{class:"k"},"Já gasto no mês"), h("div",{class:"v num"},formatCents(tight.gasto))),
       h("div",{}, h("div",{class:"k"},"Valor deste lançamento"), h("div",{class:"v num"},formatCents(payload.amountCents))),
       h("div",{}, h("div",{class:"k"},"Excedente"), h("div",{class:"v num danger"},formatCents(tight.excedente)))
@@ -969,7 +999,7 @@
   function openTravaHard(payload, av){
     var tight=av.bloqueios[0];
     var body = h("div",{class:"modal-body"},
-      figuresGrid(av,payload),
+      figuresGrid(tight,payload),
       h("div",{class:"whichlim"}, "Bloqueado por: ", h("b",{},escopoLabel(tight.lim)),
         tight.escalado?" (aviso que virou trava acima de "+tight.lim.limiarHardPct+"%)":" (trava rígida)",
         ". ", av.maxCabe>0? h("span",{}, "Ainda cabe ", h("b",{class:"num"},formatCents(av.maxCabe)), " neste escopo.") : h("span",{},"Este escopo já não comporta novos gastos.")
@@ -978,7 +1008,7 @@
       h("div",{id:"aumentarBox"})
     );
     var acts=[];
-    if(av.maxCabe>0){ acts.push(h("button",{class:"btn",onclick:function(){ $("fValor").value=(av.maxCabe/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); closeModal(); renderLive(); $("fValor").focus(); }},"Ajustar para "+formatCents(av.maxCabe))); }
+    if(av.maxCabe>0){ acts.push(h("button",{class:"btn",onclick:function(){ $("fValor").value=brl(av.maxCabe); closeModal(); renderLive(); $("fValor").focus(); }},"Ajustar para "+formatCents(av.maxCabe))); }
     acts.push(h("button",{class:"btn",onclick:function(){ toggleAumentar(payload, tight); }},"Aumentar limite"));
     acts.push(h("button",{class:"btn primary",onclick:closeModal},"Cancelar"));
     openModalShell("danger","🔒","Trava ativada — lançamento bloqueado","Este gasto ultrapassa um limite rígido. Nada foi salvo.", body, acts);
@@ -987,38 +1017,39 @@
     var box=$("aumentarBox");
     if(box.dataset.open){ box.innerHTML=""; box.dataset.open=""; return; }
     box.dataset.open="1";
-    var sugestao = tight.projetado;
     box.innerHTML="";
     box.append(h("div",{style:{marginTop:"12px",paddingTop:"14px",borderTop:"1px dashed var(--border)"}},
-      h("label",{class:"help",style:{display:"block",marginBottom:"6px"}}, "Novo teto para “"+escopoLabel(tight.lim)+"” (atual "+formatCents(tight.lim.limiteCentavos)+")"),
+      h("label",{class:"help",style:{display:"block",marginBottom:"6px"},for:"novoTeto"}, "Novo teto para “"+escopoLabel(tight.lim)+"” (atual "+formatCents(tight.lim.limiteCentavos)+")"),
       h("div",{style:{display:"flex",gap:"8px"}},
-        h("input",{class:"input",id:"novoTeto",inputmode:"decimal",value:(sugestao/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}),style:{maxWidth:"180px",fontFamily:"var(--font-mono)"}}),
+        h("input",{class:"input",id:"novoTeto",inputmode:"decimal",value:brl(tight.projetado),style:{maxWidth:"180px",fontFamily:"var(--font-mono)"}}),
         h("button",{class:"btn primary",onclick:function(){
           var novo=parseBRLToCents($("novoTeto").value);
           if(novo==null){ toast("danger","Valor de limite inválido."); return; }
+          var pre = snapAll(); // captura ANTES de mexer no teto (para o Desfazer reverter tudo)
           var antes=tight.lim.limiteCentavos; tight.lim.limiteCentavos=novo; tight.lim.atualizadoEm=nowISO();
           logAudit("ALTERACAO_LIMITE","Teto de "+escopoLabel(tight.lim)+" alterado", antes, novo, tight.lim.id);
           save(); closeModal();
-          // reavalia e tenta salvar
           var av2=avaliarTravas({categoriaId:payload.categoriaId,natureza:payload.tipo,valorNovo:payload.amountCents,despesaId:view.editId||null,ym:payload.mesRef});
           if(av2.bloqueia){ renderAll(); openTravaHard(payload,av2); }
           else if(av2.avisos.length){ renderAll(); openTravaSoft(payload,av2); }
-          else { toast("ok","Limite aumentado para "+formatCents(novo)); commitDespesa(payload,false,""); }
+          else { toast("ok","Limite aumentado para "+formatCents(novo)); commitDespesa(payload,false,"",pre); }
         }},"Confirmar novo teto")
       )
     ));
+    $("novoTeto").focus(); $("novoTeto").select();
   }
   function openTravaSoft(payload, av){
+    var tight=av.avisos[0];
     var body = h("div",{class:"modal-body"},
-      figuresGrid(av,payload),
-      h("div",{class:"whichlim"}, "Ultrapassa (aviso) o limite de ", h("b",{},escopoLabel(av.avisos[0].lim)), ". Você pode lançar mesmo assim, mas precisa justificar."),
+      figuresGrid(tight,payload),
+      h("div",{class:"whichlim"}, "Ultrapassa (aviso) o limite de ", h("b",{},escopoLabel(tight.lim)), ". Você pode lançar mesmo assim, mas precisa justificar."),
       h("div",{class:"field"},
         h("label",{for:"justif"},"Justificativa (obrigatória)"),
         h("textarea",{class:"input",id:"justif",rows:"3",maxlength:"300",placeholder:"Ex.: compra emergencial aprovada pela diretoria"})
       )
     );
     var acts=[
-      av.avisos[0].folga>0?h("button",{class:"btn",onclick:function(){ $("fValor").value=(av.avisos[0].folga/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); closeModal(); renderLive(); $("fValor").focus(); }},"Ajustar para caber"):null,
+      tight.folga>0?h("button",{class:"btn",onclick:function(){ $("fValor").value=brl(tight.folga); closeModal(); renderLive(); $("fValor").focus(); }},"Ajustar para caber"):null,
       h("button",{class:"btn ghost",onclick:closeModal},"Cancelar"),
       h("button",{class:"btn primary",onclick:function(){
         var j=($("justif").value||"").trim();
@@ -1029,29 +1060,28 @@
     openModalShell("warn","⚠︎","Acima do limite — aviso","Este gasto passa de um limite flexível. Registre o motivo para continuar.", body, acts);
   }
   function openModalShell(kind, ico, titulo, sub, bodyEl, actionsArr){
-    var m = h("div",{class:"scrim",onclick:function(ev){ if(ev.target===ev.currentTarget) closeModal(); }},
-      h("div",{class:"modal",role:"dialog","aria-modal":"true"},
+    mountModal(h("div",{class:"scrim",onclick:function(ev){ if(ev.target===ev.currentTarget) closeModal(); }},
+      h("div",{class:"modal",role:"dialog","aria-modal":"true","aria-labelledby":"dlgTitle"},
         h("div",{class:"modal-head"},
           h("div",{class:"m-ico "+kind}, ico),
-          h("div",{}, h("h3",{text:titulo}), h("div",{class:"m-sub",text:sub})),
+          h("div",{}, h("h3",{id:"dlgTitle",text:titulo}), h("div",{class:"m-sub",text:sub})),
           h("button",{class:"x",onclick:closeModal,"aria-label":"Fechar"},"✕")
         ),
         bodyEl,
         h("div",{class:"modal-foot"}, actionsArr.filter(Boolean))
       )
-    );
-    $("modalRoot").innerHTML=""; $("modalRoot").append(m);
+    ));
   }
 
   // ---------- configurações ----------
   var cfgTab="categorias";
   function openConfig(tab){
     cfgTab = tab||cfgTab;
-    var shell = h("div",{class:"scrim",onclick:function(ev){ if(ev.target===ev.currentTarget) closeModal(); }},
-      h("div",{class:"modal lg",role:"dialog","aria-modal":"true"},
+    mountModal(h("div",{class:"scrim",onclick:function(ev){ if(ev.target===ev.currentTarget) closeModal(); }},
+      h("div",{class:"modal lg",role:"dialog","aria-modal":"true","aria-labelledby":"dlgTitle"},
         h("div",{class:"modal-head"},
           h("div",{class:"m-ico accent"},"⚙︎"),
-          h("div",{}, h("h3",{},"Configurações"), h("div",{class:"m-sub"},"Categorias, limites/travas e backup dos dados")),
+          h("div",{}, h("h3",{id:"dlgTitle"},"Configurações"), h("div",{class:"m-sub"},"Categorias, limites/travas e backup dos dados")),
           h("button",{class:"x",onclick:closeModal,"aria-label":"Fechar"},"✕")
         ),
         h("div",{class:"tabs"},
@@ -1061,18 +1091,18 @@
         ),
         h("div",{class:"modal-body",id:"cfgBody"})
       )
-    );
-    $("modalRoot").innerHTML=""; $("modalRoot").append(shell);
+    ));
     if(cfgTab==="categorias") cfgCategorias();
     else if(cfgTab==="limites") cfgLimites();
     else cfgDados();
   }
   function cfgCategorias(){
     var body=$("cfgBody"); body.innerHTML="";
+    var natSel=h("select",{class:"select",id:"ncNat"}); natSel.append(h("option",{value:"fixa"},"Fixa")); natSel.append(h("option",{value:"variavel"},"Variável"));
     body.append(h("div",{class:"row3"},
-      h("div",{class:"field"}, h("label",{},"Nome"), h("input",{class:"input",id:"ncNome",maxlength:"60",placeholder:"Ex.: Impostos"})),
-      h("div",{class:"field"}, h("label",{},"Natureza"), (function(){var s=h("select",{class:"select",id:"ncNat"}); s.append(h("option",{value:"fixa"},"Fixa")); s.append(h("option",{value:"variavel"},"Variável")); return s;})()),
-      h("div",{class:"field"}, h("label",{},"Cor"), h("input",{type:"color",class:"input",id:"ncCor",value:"#1e6091",style:{height:"42px",padding:"4px"}}))
+      h("div",{class:"field"}, h("label",{for:"ncNome"},"Nome"), h("input",{class:"input",id:"ncNome",maxlength:"60",placeholder:"Ex.: Impostos"})),
+      h("div",{class:"field"}, h("label",{for:"ncNat"},"Natureza"), natSel),
+      h("div",{class:"field"}, h("label",{for:"ncCor"},"Cor"), h("input",{type:"color",class:"input",id:"ncCor",value:"#1e6091",style:{height:"42px",padding:"4px"}}))
     ));
     body.append(h("div",{style:{marginTop:"10px"}}, h("button",{class:"btn primary sm",onclick:function(){
       var nome=($("ncNome").value||"").trim();
@@ -1083,9 +1113,10 @@
     }},"+ Adicionar categoria")));
     body.append(h("div",{style:{marginTop:"18px"}}, h("div",{class:"eyebrow",style:{marginBottom:"6px"}},"Categorias")));
     var wrap=h("div",{});
+    if(!state.categorias.length) wrap.append(h("div",{class:"help"},"Nenhuma categoria. Crie a primeira acima."));
     state.categorias.forEach(function(c){
       var temDesp = state.despesas.some(function(d){return !d.excluido && d.categoriaId===c.id;});
-      wrap.append(h("div",{class:"list-item"+(c.arquivada?"":"")},
+      wrap.append(h("div",{class:"list-item"},
         h("span",{class:"dot",style:{background:c.cor||"#888"}}),
         h("div",{class:"li-main"},
           h("div",{class:"li-t"}, c.nome+(c.arquivada?"  · arquivada":"")),
@@ -1095,7 +1126,7 @@
       ));
     });
     body.append(wrap);
-    body.append(h("div",{class:"help",style:{marginTop:"10px"}},"A natureza (fixa/variável) fica travada após haver lançamentos. Categorias com histórico são arquivadas, não excluídas, para preservar a rastreabilidade."));
+    body.append(h("div",{class:"help",style:{marginTop:"10px"}},"A natureza (fixa/variável) deve ficar fixa após haver lançamentos. Categorias com histórico são arquivadas, não excluídas, para preservar a rastreabilidade."));
   }
   function cfgLimites(){
     var body=$("cfgBody"); body.innerHTML="";
@@ -1106,13 +1137,13 @@
     var modoSel=h("select",{class:"select",id:"nlModo",onchange:function(){ $("nlHardWrap").style.display=this.value==="soft"?"flex":"none"; }});
     modoSel.append(h("option",{value:"hard"},"Rígida (bloqueia)")); modoSel.append(h("option",{value:"soft"},"Flexível (avisa)"));
     body.append(h("div",{class:"row2"},
-      h("div",{class:"field"}, h("label",{},"Escopo do limite"), escSel),
-      h("div",{class:"field",id:"nlAlvoWrap",style:{display:"none"}}, h("label",{},"Categoria"), alvoSel)
+      h("div",{class:"field"}, h("label",{for:"nlEscopo"},"Escopo do limite"), escSel),
+      h("div",{class:"field",id:"nlAlvoWrap",style:{display:"none"}}, h("label",{for:"nlAlvo"},"Categoria"), alvoSel)
     ));
     body.append(h("div",{class:"row3",style:{marginTop:"10px"}},
-      h("div",{class:"field"}, h("label",{},"Teto mensal (R$)"), h("input",{class:"input",id:"nlValor",inputmode:"decimal",placeholder:"0,00",style:{fontFamily:"var(--font-mono)"}})),
-      h("div",{class:"field"}, h("label",{},"Tipo de trava"), modoSel),
-      h("div",{class:"field",id:"nlHardWrap",style:{display:"none"}}, h("label",{},"Bloqueia acima de (%)"), h("input",{class:"input",id:"nlHardPct",inputmode:"numeric",placeholder:"120",value:"120"}))
+      h("div",{class:"field"}, h("label",{for:"nlValor"},"Teto mensal (R$)"), h("input",{class:"input",id:"nlValor",inputmode:"decimal",placeholder:"0,00",style:{fontFamily:"var(--font-mono)"}})),
+      h("div",{class:"field"}, h("label",{for:"nlModo"},"Tipo de trava"), modoSel),
+      h("div",{class:"field",id:"nlHardWrap",style:{display:"none"}}, h("label",{for:"nlHardPct"},"Bloqueia acima de (%)"), h("input",{class:"input",id:"nlHardPct",inputmode:"numeric",placeholder:"120",value:"120"}))
     ));
     body.append(h("div",{style:{marginTop:"10px"}}, h("button",{class:"btn primary sm",onclick:function(){
       var esc=$("nlEscopo").value, cents=parseBRLToCents($("nlValor").value);
@@ -1121,9 +1152,14 @@
       if(esc==="categoria" && !alvo){ toast("danger","Escolha a categoria."); return; }
       if(esc!=="categoria" && state.limites.some(function(l){return l.escopo===esc;})){ toast("danger","Já existe um limite para esse escopo. Edite o existente."); return; }
       if(esc==="categoria" && state.limites.some(function(l){return l.escopo==="categoria"&&l.alvo===alvo;})){ toast("danger","Essa categoria já tem limite. Edite o existente."); return; }
-      var modo=$("nlModo").value, pct = modo==="soft"? (parseInt($("nlHardPct").value,10)||null):null;
+      var modo=$("nlModo").value, pct=null;
+      if(modo==="soft"){
+        var raw=parseInt($("nlHardPct").value,10);
+        if(isNaN(raw) || raw<=100){ toast("danger","O limiar de bloqueio deve ser um número maior que 100% (o teto)."); return; }
+        pct=raw;
+      }
       state.limites.push({id:uid(),escopo:esc,alvo:alvo,limiteCentavos:cents,modo:modo,limiarHardPct:pct,alertasPct:[80,100],atualizadoEm:nowISO()});
-      logAudit("ALTERACAO_LIMITE","Novo limite criado", null, cents, null);
+      logAudit("ALTERACAO_LIMITE","Novo limite criado ("+escopoLabel({escopo:esc,alvo:alvo})+")", null, cents, null);
       save(); renderAll(); cfgLimites();
     }},"+ Adicionar limite")));
     body.append(h("div",{style:{marginTop:"18px"}}, h("div",{class:"eyebrow",style:{marginBottom:"6px"}},"Limites ativos")));
@@ -1136,15 +1172,15 @@
           h("div",{class:"li-t"}, escopoLabel(l)),
           h("div",{class:"li-s"}, (l.modo==="hard"?"Rígida":"Flexível"+(l.limiarHardPct?" · bloqueia >"+l.limiarHardPct+"%":""))+" · gasto "+formatCents(s.gasto)+" / "+formatCents(l.limiteCentavos))
         ),
-        h("input",{class:"input",inputmode:"decimal",value:(l.limiteCentavos/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}),style:{maxWidth:"130px",fontFamily:"var(--font-mono)"},onchange:function(){
-          var v=parseBRLToCents(this.value); if(v==null){ toast("danger","Valor inválido."); this.value=(l.limiteCentavos/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); return; }
+        h("input",{class:"input",inputmode:"decimal","aria-label":"Teto de "+escopoLabel(l),value:brl(l.limiteCentavos),style:{maxWidth:"130px",fontFamily:"var(--font-mono)"},onchange:function(){
+          var v=parseBRLToCents(this.value); if(v==null){ toast("danger","Valor inválido."); this.value=brl(l.limiteCentavos); return; }
           var antes=l.limiteCentavos; l.limiteCentavos=v; l.atualizadoEm=nowISO(); logAudit("ALTERACAO_LIMITE","Teto de "+escopoLabel(l)+" alterado", antes, v, l.id); save(); renderAll(); cfgLimites();
         }}),
         h("button",{class:"btn sm danger",onclick:function(){ state.limites=state.limites.filter(function(x){return x.id!==l.id;}); save(); renderAll(); cfgLimites(); }},"Remover")
       ));
     });
     body.append(wrap);
-    body.append(h("div",{class:"help",style:{marginTop:"10px"}},"Trava rígida bloqueia o lançamento. Trava flexível avisa e permite lançar com justificativa — e vira rígida se passar do % informado. Reduzir um teto abaixo do já gasto é permitido: o escopo fica “estourado” e novos gastos rígidos ficam bloqueados até haver espaço."));
+    body.append(h("div",{class:"help",style:{marginTop:"10px"}},"Trava rígida bloqueia o lançamento. Trava flexível avisa e permite lançar com justificativa — e vira rígida acima do % informado. Reduzir um teto abaixo do já gasto é permitido: o escopo fica “estourado” e novos gastos rígidos ficam bloqueados até haver espaço."));
   }
   function cfgDados(){
     var body=$("cfgBody"); body.innerHTML="";
@@ -1156,10 +1192,9 @@
     ));
     body.append(h("div",{style:{marginTop:"20px"}}, h("div",{class:"eyebrow",style:{marginBottom:"6px"}},"Zona de risco")));
     body.append(h("div",{style:{display:"flex",gap:"10px",flexWrap:"wrap"}},
-      state.meta.exemplo?h("button",{class:"btn",onclick:function(){ limparExemplo(); closeModal(); }},"Limpar dados de exemplo"):null,
       h("button",{class:"btn danger",onclick:function(){
         if(confirm("Apagar TODAS as despesas, categorias e limites? Esta ação não pode ser desfeita (faça um backup antes).")){
-          state = seedState(); state.meta.exemplo=false; state.despesas=[]; state.limites=[]; save(); closeModal(); view.mes=mesAtual(); renderAll(); toast("info","Tudo foi reiniciado.");
+          state = emptyState(); save(); closeModal(); view.mes=mesAtual(); view.catSel=null; view.editId=null; resetForm(); applyTema(); renderAll(); toast("info","Tudo foi reiniciado.");
         }
       }},"Apagar tudo e recomeçar")
     ));
@@ -1175,10 +1210,6 @@
       ));
     });
   }
-  function limparExemplo(){
-    state.despesas=[]; state.meta.exemplo=false; save(); view.mes=mesAtual(); renderAll(); toast("ok","Dados de exemplo removidos. Comece a lançar suas despesas!");
-  }
-  $("btnLimparExemplo").addEventListener("click", limparExemplo);
 
   function exportJSON(){
     var blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
@@ -1194,9 +1225,11 @@
       try{
         var st=JSON.parse(r.result);
         if(!validate(st)){ toast("danger","Arquivo inválido: estrutura não reconhecida."); return; }
+        if(typeof st.schemaVersion==="number" && st.schemaVersion>SCHEMA){ toast("danger","Backup de versão mais nova que este app. Atualize o sistema antes de importar."); return; }
         if(!confirm("Importar este backup vai SOBRESCREVER os dados atuais. Continuar?")) return;
-        state=st; if(!Array.isArray(state.logAuditoria)) state.logAuditoria=[]; state.meta.exemplo=false;
-        save(); view.mes=mesAtual(); applyTema(); renderAll(); closeModal(); toast("ok","Backup importado com sucesso.");
+        st.schemaVersion=SCHEMA;
+        state=st; if(!Array.isArray(state.logAuditoria)) state.logAuditoria=[];
+        save(); view.mes=mesAtual(); view.catSel=null; view.editId=null; resetForm(); applyTema(); renderAll(); closeModal(); toast("ok","Backup importado com sucesso.");
       }catch(e){ toast("danger","Não foi possível ler o arquivo (JSON inválido)."); }
     };
     r.readAsText(file);
@@ -1220,7 +1253,33 @@
   $("mesPrev").addEventListener("click", function(){ view.mes=shiftMes(view.mes,-1); resetForm(); renderAll(); });
   $("mesNext").addEventListener("click", function(){ view.mes=shiftMes(view.mes,1); resetForm(); renderAll(); });
   $("btnConfig").addEventListener("click", function(){ openConfig(cfgTab); });
-  document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeModal(); });
+
+  // teclado: Esc fecha; Tab preso dentro do modal (focus trap)
+  document.addEventListener("keydown", function(e){
+    var modal = $("modalRoot").querySelector(".modal");
+    if(!modal) return;
+    if(e.key==="Escape"){ closeModal(); return; }
+    if(e.key==="Tab"){
+      var foc = modal.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])');
+      if(!foc.length) return;
+      var first=foc[0], last=foc[foc.length-1];
+      if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+    }
+  });
+
+  // sincronização entre abas: recarrega quando outra aba grava
+  window.addEventListener("storage", function(e){
+    if(e.key!==STORAGE_KEY || e.newValue==null) return;
+    var st; try{ st=JSON.parse(e.newValue); }catch(_){ return; }
+    if(!validate(st)) return;
+    st.schemaVersion=SCHEMA; if(!Array.isArray(st.logAuditoria)) st.logAuditoria=[];
+    state=st; applyTema(); renderAll();
+    toast("info","Atualizado a partir de outra aba.");
+  });
+  // flush do save pendente ao sair/ocultar a aba (evita perder a última alteração)
+  document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="hidden") flushSave(); });
+  window.addEventListener("pagehide", flushSave);
 
   // ---------- boot ----------
   $("fData").value=hoje();
