@@ -292,6 +292,7 @@
         <button id="mesNext" title="Próximo mês" aria-label="Próximo mês">›</button>
       </div>
       <button class="btn" id="btnConfig">⚙︎ Configurações</button>
+      <button class="btn hidden" id="btnAdmin" title="Painel do administrador">👤 Admin</button>
       <button class="btn icon-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
       <button class="btn" id="btnSair" title="Sair" aria-label="Sair">Sair</button>
     </div>
@@ -1300,6 +1301,12 @@
       var s = HKTCAuth.getSession();
       if(s && s.user && s.user.email) b.title = "Sair (" + s.user.email + ")";
       b.addEventListener("click", function(){ HKTCAuth.signOut(); });
+      // Botão Admin: só aparece para o administrador.
+      var adm = document.getElementById("btnAdmin");
+      if(adm && HKTCAuth.isAdmin()){
+        adm.classList.remove("hidden");
+        adm.addEventListener("click", function(){ location.href = HKTCAuth.ADMIN_PAGE; });
+      }
     } else {
       // Login não configurado ainda: esconde o botão para não confundir.
       b.style.display = "none";

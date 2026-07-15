@@ -19,6 +19,11 @@
   var SESSION_KEY = "hktc:fin:session";
   var LOGIN_PAGE  = "/login";
   var APP_PAGE    = "/";
+  var ADMIN_PAGE  = "/admin";
+
+  // Quem enxerga o painel de administrador (a validação de verdade é feita
+  // no servidor, pela Edge Function admin-invite).
+  var ADMIN_EMAIL = "rodrigo.coelho@hktc.com.br";
 
   function isConfigured() {
     return !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
@@ -155,6 +160,61 @@
     if (isConfigured() && hasSession()) location.replace(APP_PAGE);
   }
 
+  // ---------- administrador ----------
+  function currentEmail() {
+    var s = getSession();
+    return (s && s.user && s.user.email) ? s.user.email : null;
+  }
+  function isAdmin() {
+    var e = currentEmail();
+    return !!e && e.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  }
+
+  // Trava do painel admin (admin.html). Sem sessão → login; logado mas não
+  // admin → volta para o app.
+  function guardAdmin() {
+    if (!isConfigured()) {
+      console.warn("[auth] Supabase não configurado — painel admin desativado.");
+      return false;
+    }
+    if (!hasSession()) { location.replace(LOGIN_PAGE); return false; }
+    if (!isAdmin())    { location.replace(APP_PAGE);   return false; }
+    if (!accessValid()) {
+      refresh().catch(function () { clearSession(); location.replace(LOGIN_PAGE); });
+    }
+    return true;
+  }
+
+  // Gera um link de convite chamando a Edge Function (que usa a service_role).
+  function inviteUser(email, redirectTo) {
+    var s = getSession();
+    if (!isConfigured()) return Promise.reject(new Error("Supabase não configurado."));
+    if (!s || !s.access_token) return Promise.reject(new Error("Sessão expirada. Entre novamente."));
+    return fetch(SUPABASE_URL + "/functions/v1/admin-invite", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + s.access_token,
+        "apikey": SUPABASE_ANON_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: email,
+        redirectTo: redirectTo || (location.origin + LOGIN_PAGE)
+      })
+    }).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) {
+          var err = new Error((data && data.error) || ("Erro " + res.status));
+          err.status = res.status; throw err;
+        }
+        return data;
+      }, function () {
+        if (!res.ok) throw new Error("Erro " + res.status);
+        return {};
+      });
+    });
+  }
+
   global.HKTCAuth = {
     isConfigured: isConfigured,
     getSession: getSession,
@@ -170,7 +230,12 @@
     signOut: signOut,
     guardApp: guardApp,
     redirectIfLoggedIn: redirectIfLoggedIn,
+    currentEmail: currentEmail,
+    isAdmin: isAdmin,
+    guardAdmin: guardAdmin,
+    inviteUser: inviteUser,
     LOGIN_PAGE: LOGIN_PAGE,
-    APP_PAGE: APP_PAGE
+    APP_PAGE: APP_PAGE,
+    ADMIN_PAGE: ADMIN_PAGE
   };
 })(window);

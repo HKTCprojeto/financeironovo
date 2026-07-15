@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin · HKTC Financeiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Trava: só admin logado. Roda antes de renderizar para evitar flash. -->
+<script src="auth.js"></script>
+<script>if(window.HKTCAuth) HKTCAuth.guardAdmin();</script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:#eef1f6;color:#1a2233;min-height:100vh;
+  }
+  a{color:#3f4fb0;text-decoration:none}
+  a:hover{color:#2f3d94}
+
+  header{
+    background:linear-gradient(100deg,#1b4a7a,#0f2f52);color:#fff;
+    padding:16px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    box-shadow:0 4px 18px rgba(6,26,50,.25);
+  }
+  header .logo{height:40px;background:#fff;border-radius:8px;padding:4px 8px;display:flex;align-items:center}
+  header .logo img{height:100%;display:block}
+  header .titles h1{margin:0;font-size:18px;font-weight:700;letter-spacing:.2px}
+  header .titles .sub{font-size:12.5px;opacity:.8;font-weight:500}
+  header .spacer{margin-left:auto}
+  header .who{font-size:12.5px;opacity:.85;margin-right:6px}
+  header .hbtn{
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;
+    padding:8px 13px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+    transition:background .15s;
+  }
+  header .hbtn:hover{background:rgba(255,255,255,.22)}
+
+  main{max-width:760px;margin:0 auto;padding:28px 20px 80px}
+
+  .card{background:#fff;border:1px solid #e3e7ef;border-radius:16px;padding:26px;box-shadow:0 8px 26px rgba(16,24,40,.06);margin-bottom:22px}
+  .card h2{margin:0 0 4px;font-size:17px;font-weight:700;color:#2a3350}
+  .card .desc{margin:0 0 20px;font-size:13.5px;color:#71798b;font-weight:500;line-height:1.5}
+
+  label{display:block;font-size:13px;font-weight:600;color:#33405a;margin-bottom:7px}
+  .field-row{display:flex;gap:10px;flex-wrap:wrap}
+  input[type=email],input.link{
+    flex:1;min-width:220px;padding:12px 14px;border-radius:10px;border:1px solid #dde1e9;background:#fff;
+    color:#1a2233;font-size:14.5px;font-family:inherit;transition:border-color .18s,box-shadow .18s;
+  }
+  input:focus{outline:none;border-color:#5566cc;box-shadow:0 0 0 3px rgba(85,102,204,.15)}
+  input::placeholder{color:#9aa2b1}
+
+  .btn{
+    padding:12px 18px;border:none;border-radius:10px;background:linear-gradient(90deg,#3b3f8f,#7a7fd6);
+    color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;
+    box-shadow:0 8px 20px rgba(59,63,143,.28);transition:transform .12s,box-shadow .18s,opacity .18s;
+  }
+  .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 26px rgba(59,63,143,.38)}
+  .btn:disabled{opacity:.7;cursor:default}
+  .btn.ghost{background:#eef1f6;color:#3b3f8f;box-shadow:none;border:1px solid #d7dce6;padding:10px 14px;font-size:13px}
+  .btn.ghost:hover{background:#e4e9f2;transform:none}
+
+  .msg{margin:16px 0 0;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:500;line-height:1.45;display:none}
+  .msg.show{display:block}
+  .msg.error{background:#fdecea;color:#b3261e;border:1px solid #f7cdc8}
+  .msg.ok{background:#e7f5ec;color:#1c7a44;border:1px solid #bfe6cd}
+  .msg.info{background:#eaf1fb;color:#2f4a80;border:1px solid #cbdcf5}
+
+  .result{margin-top:20px;padding:16px;border:1px dashed #c7cfdd;border-radius:12px;background:#f7f9fc;display:none}
+  .result.show{display:block}
+  .result .rlabel{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a93a6;margin-bottom:8px}
+  .result .hint{margin:10px 0 0;font-size:12.5px;color:#71798b;line-height:1.5}
+
+  .invites{list-style:none;margin:0;padding:0}
+  .invites li{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #eef1f6;flex-wrap:wrap}
+  .invites li:first-child{border-top:none}
+  .invites .em{font-weight:600;font-size:14px;color:#2a3350;min-width:180px;flex:1;word-break:break-all}
+  .invites .empty{color:#9aa2b1;font-size:13.5px;font-weight:500;padding:6px 0}
+  .copied{color:#1c7a44;font-size:12.5px;font-weight:600}
+
+  .warnbar{background:#fff7e6;border:1px solid #f3dca0;color:#8a6412;border-radius:12px;padding:13px 16px;font-size:13px;font-weight:500;line-height:1.5;margin-bottom:22px;display:none}
+  .warnbar.show{display:block}
+
+  @media (max-width:560px){ main{padding:20px 14px 60px} .card{padding:20px} }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo"><img src="assets/logo-hktc.webp" alt="HKTC"></div>
+    <div class="titles">
+      <h1>Painel do administrador</h1>
+      <div class="sub">Convites de acesso · HKTC Financeiro</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="who" id="who"></span>
+    <button class="hbtn" id="btnApp" title="Voltar ao sistema">← Sistema</button>
+    <button class="hbtn" id="btnSair">Sair</button>
+  </header>
+
+  <main>
+    <div class="warnbar" id="warnConfig">
+      Supabase não está configurado (auth.js). O painel funciona só depois de configurar o login.
+    </div>
+
+    <div class="card">
+      <h2>Convidar novo usuário</h2>
+      <p class="desc">
+        Digite o e-mail da pessoa e gere um link de convite. Envie o link para ela
+        (WhatsApp, e-mail, etc.); ao abrir, ela define a própria senha e ganha acesso.
+        O convite é individual e vinculado a esse e-mail.
+      </p>
+
+      <form id="formInvite" novalidate>
+        <label for="inviteEmail">E-mail do convidado</label>
+        <div class="field-row">
+          <input id="inviteEmail" type="email" placeholder="pessoa@hktc.com.br" autocomplete="off" required>
+          <button type="submit" class="btn" id="btnInvite">Gerar link de convite</button>
+        </div>
+      </form>
+
+      <div class="msg" id="msg" role="alert" aria-live="polite"></div>
+
+      <div class="result" id="result">
+        <div class="rlabel">Link de convite</div>
+        <div class="field-row">
+          <input class="link" id="linkOut" type="text" readonly>
+          <button type="button" class="btn ghost" id="btnCopy">Copiar</button>
+        </div>
+        <p class="hint" id="resultHint"></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Convites gerados nesta sessão</h2>
+      <p class="desc">Registro temporário (some ao recarregar). Cada link fica salvo no Supabase até ser usado.</p>
+      <ul class="invites" id="inviteList">
+        <li class="empty" id="listEmpty">Nenhum convite gerado ainda.</li>
+      </ul>
+    </div>
+  </main>
+
+  <script>
+  (function () {
+    "use strict";
+    var A = window.HKTCAuth;
+    var $ = function (id) { return document.getElementById(id); };
+
+    var msg = $("msg"), result = $("result"), linkOut = $("linkOut"),
+        list = $("inviteList"), listEmpty = $("listEmpty");
+
+    // Cabeçalho
+    if (A && A.currentEmail()) $("who").textContent = A.currentEmail();
+    $("btnApp").addEventListener("click", function () { location.href = A.APP_PAGE; });
+    $("btnSair").addEventListener("click", function () { A.signOut(); });
+
+    if (!A || !A.isConfigured()) { $("warnConfig").classList.add("show"); }
+
+    function showMsg(kind, text) { msg.className = "msg show " + kind; msg.textContent = text; }
+    function clearMsg() { msg.className = "msg"; msg.textContent = ""; }
+
+    function busy(on) {
+      var b = $("btnInvite");
+      if (on) { b.dataset.t = b.textContent; b.textContent = "Gerando…"; b.disabled = true; }
+      else { if (b.dataset.t) b.textContent = b.dataset.t; b.disabled = false; }
+    }
+
+    function copy(text, onDone) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(onDone, function () { fallback(); });
+      } else { fallback(); }
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); onDone(); } catch (_) {}
+        document.body.removeChild(ta);
+      }
+    }
+
+    function addToList(email, link) {
+      listEmpty.style.display = "none";
+      var li = document.createElement("li");
+      var em = document.createElement("span"); em.className = "em"; em.textContent = email;
+      var btn = document.createElement("button"); btn.className = "btn ghost"; btn.textContent = "Copiar link";
+      var ok = document.createElement("span"); ok.className = "copied"; ok.style.display = "none"; ok.textContent = "✓ copiado";
+      btn.addEventListener("click", function () {
+        copy(link, function () { ok.style.display = "inline"; setTimeout(function(){ ok.style.display="none"; }, 1800); });
+      });
+      li.appendChild(em); li.appendChild(btn); li.appendChild(ok);
+      list.insertBefore(li, list.firstChild);
+    }
+
+    $("btnCopy").addEventListener("click", function () {
+      copy(linkOut.value, function () {
+        var b = $("btnCopy"); var t = b.textContent; b.textContent = "✓ Copiado";
+        setTimeout(function(){ b.textContent = t; }, 1600);
+      });
+    });
+
+    $("formInvite").addEventListener("submit", function (e) {
+      e.preventDefault();
+      clearMsg(); result.classList.remove("show");
+      if (!A || !A.isConfigured()) { showMsg("error", "Supabase não configurado (auth.js)."); return; }
+      var email = $("inviteEmail").value.trim();
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg("error", "Informe um e-mail válido."); return; }
+      busy(true);
+      A.inviteUser(email).then(function (data) {
+        busy(false);
+        linkOut.value = data.action_link;
+        result.classList.add("show");
+        $("resultHint").textContent = "Envie este link para " + data.email + ". Ao abrir, a pessoa define a senha e entra no sistema.";
+        addToList(data.email, data.action_link);
+        $("inviteEmail").value = "";
+        showMsg("ok", "Convite gerado para " + data.email + ".");
+      }).catch(function (err) {
+        busy(false);
+        var m = err && err.message ? err.message : "Não foi possível gerar o convite.";
+        if (err && err.status === 401) m = "Sua sessão expirou. Entre novamente.";
+        if (/Failed to fetch|NetworkError/i.test(m)) m = "Não foi possível conectar à função de convite. Ela já foi publicada no Supabase?";
+        showMsg("error", m);
+      });
+    });
+  })();
+  </script>
+</body>
+</html>

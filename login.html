@@ -282,11 +282,15 @@
       var params = new URLSearchParams(hash);
       var type = params.get("type");
       var at = params.get("access_token");
-      if (type === "recovery" && at) {
+      if ((type === "recovery" || type === "invite" || type === "signup") && at) {
         recoveryToken = at;
         history.replaceState(null, "", location.pathname + location.search);
         show("reset");
-        showMsg("info", "Defina sua nova senha.");
+        if (type === "invite" || type === "signup") {
+          showMsg("info", "Bem-vindo! Defina uma senha para ativar seu acesso.");
+        } else {
+          showMsg("info", "Defina sua nova senha.");
+        }
         return true;
       }
       if (params.get("error_description")) {
