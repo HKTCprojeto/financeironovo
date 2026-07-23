@@ -469,7 +469,7 @@ function BuilderColumn(p: BuilderProps) {
 
           {d.trigger.type === "manual" && (
             <p className="text-xs text-muted-foreground">
-              Roda apenas quando você clicar em "Executar agora" ou pedir pro Marcos no chat.
+              Roda apenas quando você clicar em "Executar agora" ou pedir pra Lívia no chat.
             </p>
           )}
         </CardContent>
@@ -541,7 +541,7 @@ function BuilderColumn(p: BuilderProps) {
 
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm">O que o Marcos vai fazer</CardTitle>
+          <CardTitle className="text-sm">O que a Lívia vai fazer</CardTitle>
           <Popover open={actionPickerOpen} onOpenChange={setActionPickerOpen}>
             <PopoverTrigger asChild>
               <Button size="sm" variant="outline" className="h-8 gap-1">
@@ -824,7 +824,7 @@ function ActionFields({ action, onPatch }: { action: AutomationAction; onPatch: 
     case "ask_owner_confirm":
       return (
         <div>
-          <Label className="text-xs text-muted-foreground">Pergunta que o Marcos vai te fazer</Label>
+          <Label className="text-xs text-muted-foreground">Pergunta que a Lívia vai te fazer</Label>
           <TextareaWithVariables
             value={action.question}
             onChange={(v) => onPatch({ question: v })}

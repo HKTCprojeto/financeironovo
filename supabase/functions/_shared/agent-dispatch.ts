@@ -1,7 +1,7 @@
 /**
  * _shared/agent-dispatch.ts
  * Helpers compartilhados entre chat-send-message e incoming-message para
- * disparar o agente Marcos via /hooks/agent na VPS.
+ * disparar o agente Lívia via /hooks/agent na VPS.
  */
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 

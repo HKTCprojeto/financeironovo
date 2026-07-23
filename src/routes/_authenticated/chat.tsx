@@ -12,7 +12,7 @@ import remarkGfm from "remark-gfm";
 import { CFO_QUICK_ACTIONS } from "@/lib/cfo-quick-actions";
 
 export const Route = createFileRoute("/_authenticated/chat")({
-  head: () => ({ meta: [{ title: "Conversar com Marcos — Agente CFO" }] }),
+  head: () => ({ meta: [{ title: "Conversar com Lívia — Agente CFO" }] }),
   component: ChatPage,
 });
 
@@ -214,7 +214,7 @@ function ChatPage() {
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <div className="font-semibold leading-tight">Marcos — seu CFO virtual</div>
+            <div className="font-semibold leading-tight">Lívia — seu CFO virtual</div>
             <div className="text-xs text-muted-foreground">
               Mesmo pipeline do WhatsApp · confirma writes antes de executar
             </div>
@@ -233,7 +233,7 @@ function ChatPage() {
             <div className="text-sm text-muted-foreground py-8 text-center">Carregando...</div>
           ) : messages.length === 0 ? (
             <Card className="p-6 text-sm text-muted-foreground bg-muted/30 border-dashed">
-              Olá. Sou o <strong className="text-foreground">Marcos</strong>, seu CFO. Pergunte
+              Olá. Sou a <strong className="text-foreground">Lívia</strong>, sua CFO. Pergunte
               sobre saldo, contas a pagar, pipeline. Pode pedir pra eu fazer ações também
               <span className="opacity-70"> (sempre confirmo antes)</span>.
             </Card>
@@ -264,7 +264,7 @@ function ChatPage() {
                         <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" />
                         <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:150ms]" />
                         <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:300ms]" />
-                        <span className="ml-2 text-xs">Marcos pensando…</span>
+                        <span className="ml-2 text-xs">Lívia pensando…</span>
                       </div>
                     ) : null}
                     {m.status === "error" && !m.content && (
@@ -307,7 +307,7 @@ function ChatPage() {
               send();
             }
           }}
-          placeholder="Pergunte algo ao Marcos..."
+          placeholder="Pergunte algo à Lívia..."
           disabled={sending}
           className="flex-1"
         />

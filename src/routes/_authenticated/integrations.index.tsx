@@ -187,7 +187,7 @@ function IntegrationsIndex() {
       return;
     }
     toast.success("Comando enviado", {
-      description: "Marcos vai atualizar e te avisar no chat em ~30s.",
+      description: "Lívia vai atualizar e te avisar no chat em ~30s.",
     });
   }
 

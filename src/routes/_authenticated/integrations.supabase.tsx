@@ -242,7 +242,7 @@ function SupabaseIntegrationsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Conexões Supabase</h1>
           <p className="text-sm text-muted-foreground">
-            Conecte N projetos Supabase pra dar a Marcos acesso total aos dados via MCP oficial.
+            Conecte N projetos Supabase pra dar a Lívia acesso total aos dados via MCP oficial.
           </p>
         </div>
         <Button onClick={openNew}>
@@ -327,7 +327,7 @@ function SupabaseIntegrationsPage() {
             <DialogDescription>
               {form.id
                 ? "Atualize os dados. Deixe a key vazia pra manter a atual."
-                : "Conecte um projeto Supabase pra Marcos acessar os dados."}
+                : "Conecte um projeto Supabase pra Lívia acessar os dados."}
             </DialogDescription>
           </DialogHeader>
 
@@ -390,7 +390,7 @@ function SupabaseIntegrationsPage() {
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>
                   <strong>Atenção:</strong> essa chave dá acesso TOTAL ao seu banco.
-                  Marcos pode executar SQL, modificar dados, deployar functions. Use apenas
+                  Lívia pode executar SQL, modificar dados, deployar functions. Use apenas
                   projetos onde você quer dar essa permissão.
                 </span>
               </div>
@@ -411,7 +411,7 @@ function SupabaseIntegrationsPage() {
               <div className="space-y-0.5">
                 <Label htmlFor="sp-active">Ativa</Label>
                 <p className="text-xs text-muted-foreground">
-                  Quando inativa, Marcos não acessa esse projeto.
+                  Quando inativa, Lívia não acessa esse projeto.
                 </p>
               </div>
               <Switch
@@ -443,7 +443,7 @@ function SupabaseIntegrationsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remover projeto?</AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmDelete?.name} será desconectado. Marcos perderá acesso aos dados desse
+              {confirmDelete?.name} será desconectado. Lívia perderá acesso aos dados desse
               projeto. Essa ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>

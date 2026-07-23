@@ -12,7 +12,7 @@ export function OnboardingPendingBanner() {
           <div>
             <div className="text-sm font-medium">Você ainda não completou a configuração</div>
             <div className="text-xs text-muted-foreground">
-              Termine o setup do Marcos em poucos minutos.
+              Termine o setup da Lívia em poucos minutos.
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 /**
  * POST /chat-marcos-reply
- * Recebe a resposta do agente Marcos (chamado pela VPS) e grava no chat_messages.
+ * Recebe a resposta do agente Lívia (chamado pela VPS) e grava no chat_messages.
  * Auth: header X-Panel-Token.
  *
  * Body: { thread_id, run_id, content, status: 'sent'|'error' }

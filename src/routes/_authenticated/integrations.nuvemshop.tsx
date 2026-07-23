@@ -72,7 +72,7 @@ function NuvemshopPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Conectar Nuvemshop</h1>
         <p className="text-sm text-muted-foreground">
-          Conecte sua loja Nuvemshop pro Marcos consultar pedidos, produtos e clientes.
+          Conecte sua loja Nuvemshop pra Lívia consultar pedidos, produtos e clientes.
         </p>
       </div>
 

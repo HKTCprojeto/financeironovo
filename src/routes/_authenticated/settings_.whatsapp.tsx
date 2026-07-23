@@ -217,7 +217,7 @@ function WhatsAppPage() {
           <MessageCircle className="h-6 w-6" /> WhatsApp
         </h1>
         <p className="text-sm text-muted-foreground">
-          Conecte sua Evolution API e pareie números — Marcos atende pelo WhatsApp.
+          Conecte sua Evolution API e pareie números — Lívia atende pelo WhatsApp.
         </p>
       </div>
 
@@ -326,7 +326,7 @@ function WhatsAppPage() {
               <div className="font-medium text-emerald-700 dark:text-emerald-400">
                 WhatsApp conectado ✅
               </div>
-              <div className="text-xs text-muted-foreground">Marcos já atende em <code>{activeInstance}</code></div>
+              <div className="text-xs text-muted-foreground">Lívia já atende em <code>{activeInstance}</code></div>
             </div>
           )}
 
@@ -376,7 +376,7 @@ function WhatsAppPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Label className="text-xs text-muted-foreground">Marcos chat</Label>
+                    <Label className="text-xs text-muted-foreground">Lívia chat</Label>
                     <Switch
                       checked={inst.receives_marcos_chat}
                       onCheckedChange={(v) => toggleReceives(inst, v)}

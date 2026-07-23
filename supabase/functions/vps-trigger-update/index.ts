@@ -1,6 +1,6 @@
 /**
  * POST /vps-trigger-update
- * Dispara Marcos (via /hooks/agent na VPS) pra rodar self_update.sh.
+ * Dispara Lívia (via /hooks/agent na VPS) pra rodar self_update.sh.
  * Auth: JWT Supabase.
  */
 import { adminClient, corsHeaders, errorResponse, jsonResponse } from "../_shared/auth.ts";

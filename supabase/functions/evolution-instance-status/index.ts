@@ -1,7 +1,7 @@
 /**
  * POST /evolution-instance-status
  * Consulta connectionState da Evolution, atualiza whatsapp_instances e
- * dispara credentials_sync no Marcos quando virar "open" pela 1a vez.
+ * dispara credentials_sync na Lívia quando virar "open" pela 1a vez.
  * Auth: JWT.
  */
 import { adminClient, corsHeaders, errorResponse, jsonResponse } from "../_shared/auth.ts";
@@ -85,7 +85,7 @@ Deno.serve(async (req: Request) => {
   if (phone) update.phone_number = phone;
   if (mapped === "open") update.qr_code_b64 = null;
 
-  // 1ª vez open → empurra creds pro Marcos
+  // 1ª vez open → empurra creds pra Lívia
   const credsPushed = meta.creds_pushed === true;
   let credsPushedNow = false;
   if (mapped === "open" && !credsPushed) {

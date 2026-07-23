@@ -6,7 +6,7 @@ Tudo que o user faz no `/chat` web precisa também funcionar via WhatsApp e
 Telegram. Pareamento de canais 100% pelo painel — **sem SSH, sem editar
 arquivo no servidor, sem rodar comando manual**.
 
-O Marcos (CFO virtual) é o mesmo cérebro em qualquer canal: mesmo histórico,
+A Lívia (CFO virtual) é o mesmo cérebro em qualquer canal: mesmo histórico,
 mesmas tools, mesmas regras de confirmação. O canal é só transporte.
 
 ## Channels suportados (meta)
@@ -92,9 +92,9 @@ create policy "user_owns_channel" on public.channel_instances
 ## Critério de aceite (Sprint 33)
 
 - [ ] User cria canal WhatsApp pelo painel, escaneia QR, manda mensagem pro
-      número, Marcos responde
+      número, Lívia responde
 - [ ] User cria canal Telegram, cola bot token, manda `/start` no bot,
-      Marcos responde
+      Lívia responde
 - [ ] Histórico unificado: mensagem do WhatsApp aparece no `/chat` web
       (mesmo `thread_id` por user+canal, ou agrupamento visível)
 - [ ] Remover canal pelo painel revoga credencial e para de receber

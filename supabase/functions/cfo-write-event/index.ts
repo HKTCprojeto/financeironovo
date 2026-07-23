@@ -1,6 +1,6 @@
 /**
  * POST /cfo-write-event
- * Registra um write executado por Marcos (create_payable, pay_payable, etc.).
+ * Registra um write executado por Lívia (create_payable, pay_payable, etc.).
  * Auth: X-Panel-Token.
  * Body: { channel, thread_id, run_id?, action, erp?, erp_record_id?, amount?, supplier?,
  *         due_date?, category?, raw_text?, dedup_key?, status?, error?, confirmed_at?,

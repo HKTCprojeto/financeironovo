@@ -1,6 +1,6 @@
 /**
- * Mapeia nomes técnicos de tools (chamadas pelo Marcos) → label/ícone amigável.
- * Usado no chat pra mostrar pílulas legíveis quando Marcos chama tools.
+ * Mapeia nomes técnicos de tools (chamadas pela Lívia) → label/ícone amigável.
+ * Usado no chat pra mostrar pílulas legíveis quanda Lívia chama tools.
  */
 
 export type ToolMeta = {

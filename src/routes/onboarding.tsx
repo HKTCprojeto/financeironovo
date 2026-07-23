@@ -102,7 +102,7 @@ function Step1Welcome({ onNext }: { onNext: () => void }) {
         <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
           <Briefcase className="h-10 w-10 text-primary" />
         </div>
-        <CardTitle className="text-2xl">Olá! Vou te apresentar o Marcos.</CardTitle>
+        <CardTitle className="text-2xl">Olá! Vou te apresentar a Lívia.</CardTitle>
         <CardDescription>Seu CFO virtual. Vamos configurar tudo em ~5 minutos.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -190,7 +190,7 @@ function Step2Anthropic({ data, updateData, onNext, onBack }: any) {
           <CardTitle>Chave da Anthropic</CardTitle>
         </div>
         <CardDescription>
-          Marcos usa o cérebro do Claude. Você precisa de uma API key da Anthropic.
+          Lívia usa o cérebro do Claude. Você precisa de uma API key da Anthropic.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -251,7 +251,7 @@ function Step3WhatsApp({ data, updateData, onNext, onBack }: any) {
           <Phone className="h-5 w-5 text-primary" />
           <CardTitle>Seu WhatsApp</CardTitle>
         </div>
-        <CardDescription>Onde Marcos vai te enviar alertas e onde você vai conversar com ele.</CardDescription>
+        <CardDescription>Onde Lívia vai te enviar alertas e onde você vai conversar com ela.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -354,7 +354,7 @@ function Step4Erp({ data, updateData, onNext, onBack }: any) {
           <Plug className="h-5 w-5 text-primary" />
           <CardTitle>Conecte seu ERP</CardTitle>
         </div>
-        <CardDescription>Qual sistema financeiro você usa? Marcos vai ler dele.</CardDescription>
+        <CardDescription>Qual sistema financeiro você usa? Lívia vai ler dele.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -461,7 +461,7 @@ function Step5Crm({ data, updateData, onNext, onBack }: any) {
           <Plug className="h-5 w-5 text-primary" />
           <CardTitle>Conecte um CRM (opcional)</CardTitle>
         </div>
-        <CardDescription>Marcos pode prever receita futura olhando seu pipeline.</CardDescription>
+        <CardDescription>Lívia pode prever receita futura olhando seu pipeline.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -675,7 +675,7 @@ function Step7WhatsAppPair({ data, updateData, onNext, onBack }: any) {
           <CardTitle>Parear o WhatsApp</CardTitle>
         </div>
         <CardDescription>
-          O Marcos vai usar seu próprio WhatsApp (web) para te enviar mensagens.
+          A Lívia vai usar seu próprio WhatsApp (web) para te enviar mensagens.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -727,14 +727,14 @@ function Step8Done({ onComplete }: { onComplete: () => void }) {
           <div className="absolute -top-1 -right-1 text-2xl animate-pulse">✨</div>
           <div className="absolute -bottom-1 -left-1 text-2xl animate-pulse delay-150">🎉</div>
         </div>
-        <CardTitle className="text-2xl">Marcos está vivo!</CardTitle>
+        <CardTitle className="text-2xl">Lívia está vivo!</CardTitle>
         <CardDescription>
           Você vai receber seu primeiro alerta amanhã às 7h. Bem-vindo ao Agente CFO.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {[
-          { to: "/chat", icon: MessageSquare, label: "Conversar com Marcos", desc: "Pergunte qualquer coisa pelo painel." },
+          { to: "/chat", icon: MessageSquare, label: "Conversar com Lívia", desc: "Pergunte qualquer coisa pelo painel." },
           { to: "/", icon: BarChart3, label: "Ver dashboard", desc: "Saldo, eventos e custos do mês." },
           { to: "/settings", icon: SettingsIcon, label: "Configurar regras", desc: "Ajustar alertas e preferências." },
         ].map((c) => (
@@ -787,7 +787,7 @@ function Step5Billing({ data, updateData, onNext, onBack }: any) {
           <CreditCard className="h-5 w-5 text-primary" />
           <CardTitle>Plataforma de cobrança (opcional)</CardTitle>
         </div>
-        <CardDescription>Cobra clientes via boleto/PIX/cartão? Marcos pode acompanhar inadimplência.</CardDescription>
+        <CardDescription>Cobra clientes via boleto/PIX/cartão? Lívia pode acompanhar inadimplência.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-2">
@@ -870,7 +870,7 @@ function Step7Ecommerce({ data, updateData, onNext, onBack }: any) {
           <ShoppingCart className="h-5 w-5 text-primary" />
           <CardTitle>E-commerce (opcional)</CardTitle>
         </div>
-        <CardDescription>Vende online? Marcos lê pedidos e estoque do seu canal.</CardDescription>
+        <CardDescription>Vende online? Lívia lê pedidos e estoque do seu canal.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-2">

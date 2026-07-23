@@ -243,7 +243,7 @@ function AutomationsListPage() {
             <Zap className="h-7 w-7 text-primary" /> Automações
           </h1>
           <p className="text-muted-foreground mt-1 max-w-xl">
-            Conecte triggers a ações. Marcos executa pra você, com sua confirmação quando necessário.
+            Conecte triggers a ações. Lívia executa pra você, com sua confirmação quando necessário.
           </p>
         </div>
         <div className="flex gap-2">

@@ -55,7 +55,7 @@ const features = [
     icon: MessageSquare,
     emoji: "💬",
     title: "Conversa no WhatsApp",
-    desc: "Marcos responde quando você pergunta e te alerta quando algo importa.",
+    desc: "Lívia responde quando você pergunta e te alerta quando algo importa.",
   },
   {
     icon: DollarSign,
@@ -229,7 +229,7 @@ function InstallPage() {
         <div className="mx-auto max-w-3xl px-6 py-16 text-center">
           <h2 className="text-3xl font-bold mb-4">Pronto pra começar?</h2>
           <p className="text-muted-foreground mb-8">
-            Em ~5 minutos seu Marcos está rodando na sua VPS, conectado ao seu ERP.
+            Em ~5 minutos sua Lívia está rodando na sua VPS, conectado ao seu ERP.
           </p>
           <Button asChild size="lg" className="text-base">
             <a href={REMIX_URL} target="_blank" rel="noopener noreferrer">
