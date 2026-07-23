@@ -1,6 +1,6 @@
 /**
  * POST /dashboard-publish-insights
- * Persiste insights gerados por Marcos (CFO IA).
+ * Persiste insights gerados por Lívia (CFO IA).
  * Auth: X-Panel-Token (VPS → painel).
  */
 

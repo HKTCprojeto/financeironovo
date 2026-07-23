@@ -1,6 +1,6 @@
 /**
- * Atalhos de skills do agente Marcos (CFO).
- * São apenas prompts em PT — o Marcos roteia para a skill certa.
+ * Atalhos de skills do agente Lívia (CFO).
+ * São apenas prompts em PT — a Lívia roteia para a skill certa.
  */
 export type CfoQuickAction = { label: string; prompt: string };
 

@@ -149,7 +149,7 @@ function SistemaPage() {
         <CardContent className="flex gap-3 pt-6">
           <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
           <div className="text-sm">
-            Estas ações executam comandos privilegiados na sua VPS através do agente Marcos.
+            Estas ações executam comandos privilegiados na sua VPS através do agente Lívia.
             Use com cuidado — reiniciar daemons em produção pode interromper conversas em curso.
           </div>
         </CardContent>

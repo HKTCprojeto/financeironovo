@@ -59,7 +59,7 @@ Deno.serve(async (req: Request) => {
   const fresh = Date.now() - lastHb < 5 * 60 * 1000;
   if (!fresh) {
     return errorResponse(
-      "Marcos está dormindo — VPS desconectada (sem heartbeat recente)",
+      "Lívia está dormindo — VPS desconectada (sem heartbeat recente)",
       503,
     );
   }

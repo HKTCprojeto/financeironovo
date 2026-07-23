@@ -42,7 +42,7 @@ import { supabase } from "@/integrations/supabase/client";
 const mainItems = [
   { title: "Painel", url: "/", icon: LayoutDashboard, exact: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
-  { title: "Conversar com Marcos", url: "/chat", icon: MessageCircle },
+  { title: "Conversar com Lívia", url: "/chat", icon: MessageCircle },
   { title: "Relatórios", url: "/reports", icon: BarChart3 },
   { title: "Metas", url: "/goals", icon: Target },
   { title: "Automações", url: "/automations", icon: Zap },

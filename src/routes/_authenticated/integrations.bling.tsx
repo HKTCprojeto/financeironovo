@@ -82,7 +82,7 @@ function BlingPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Conectar Bling</h1>
         <p className="text-sm text-muted-foreground">
-          Conecte sua conta Bling pro Marcos consultar fluxo de caixa do seu e-commerce.
+          Conecte sua conta Bling pra Lívia consultar fluxo de caixa do seu e-commerce.
         </p>
       </div>
 

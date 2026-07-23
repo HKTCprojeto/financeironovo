@@ -167,7 +167,7 @@ export function CredentialsDialog({ open, onOpenChange, spec, isExisting, onSave
             <div className="space-y-0.5">
               <Label htmlFor="ic-active">Ativa</Label>
               <p className="text-xs text-muted-foreground">
-                Quando inativa, Marcos não usa essa integração.
+                Quando inativa, Lívia não usa essa integração.
               </p>
             </div>
             <Switch id="ic-active" checked={active} onCheckedChange={setActive} />

@@ -1,7 +1,7 @@
 /**
  * POST /vps-admin-action
  * Auth: JWT Supabase. Dispara ação administrativa no agente da VPS via /hooks/agent.
- * Marcos executa admin_action.sh e responde no chat_messages com runId.
+ * Lívia executa admin_action.sh e responde no chat_messages com runId.
  *
  * Body: { action: string, params?: Record<string, unknown> }
  * Retorna: { run_id, thread_id }

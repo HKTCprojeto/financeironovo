@@ -80,7 +80,7 @@ function HubspotPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Conectar HubSpot</h1>
         <p className="text-sm text-muted-foreground">
-          Conecte sua conta HubSpot pro Marcos consultar pipeline, contatos e deals.
+          Conecte sua conta HubSpot pra Lívia consultar pipeline, contatos e deals.
         </p>
       </div>
 

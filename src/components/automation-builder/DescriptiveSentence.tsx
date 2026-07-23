@@ -2,7 +2,7 @@ import type { Automation, AutomationTrigger, AutomationAction } from "@/types/au
 import { metricLabel, NUMBER_OPERATOR_LABELS, describeCron, formatBRL, ACTION_META } from "./constants";
 
 function describeTrigger(t: AutomationTrigger): string {
-  if (t.type === "manual") return "Marcos rodar manualmente";
+  if (t.type === "manual") return "Lívia rodar manualmente";
   if (t.type === "cron") return describeCron(t.expression);
   if (t.type === "metric") {
     const op = NUMBER_OPERATOR_LABELS[t.operator] ?? t.operator;
@@ -36,7 +36,7 @@ export function DescriptiveSentence({ draft }: { draft: Automation }) {
           </>
         )}
         ,{" "}
-        <span className="font-semibold text-primary">Marcos vai</span>{" "}
+        <span className="font-semibold text-primary">Lívia vai</span>{" "}
         <span>{describeActions(draft.actions)}</span>
         {draft.require_confirmation && (
           <>

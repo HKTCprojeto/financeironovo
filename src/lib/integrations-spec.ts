@@ -225,7 +225,7 @@ export const INTEGRATIONS_SPEC: IntegrationSpec[] = [
   {
     slug: "supabase",
     name: "Supabase",
-    description: "Conecte N projetos — Marcos acessa dados via MCP.",
+    description: "Conecte N projetos — Lívia acessa dados via MCP.",
     category: "database",
     auth_mode: "api_key",
     custom_route: "/integrations/supabase",

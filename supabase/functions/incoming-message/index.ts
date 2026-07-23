@@ -112,7 +112,7 @@ Canal: ${channelLabel}
 Phone/Chat: ${externalId}
 Usuário: ${text}
 ${contextBlock}${historyBlock}${pendingWriteBlock}
-Você é Marcos, CFO virtual. Leia e siga rigorosamente:
+Você é Lívia, CFO virtual. Leia e siga rigorosamente:
   $HOME/.openclaw/workspace/skills/agente-cfo/prompts/conversa.md
 
 CANAL ATIVO: ${channel} — RESPONDA SEMPRE NESTE CANAL via panel_post_reply.sh.

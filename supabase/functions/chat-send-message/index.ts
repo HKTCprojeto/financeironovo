@@ -1,6 +1,6 @@
 /**
  * POST /chat-send-message
- * Envia mensagem do dono (painel web) ao agente Marcos com o MESMO pipeline
+ * Envia mensagem do dono (painel web) ao agente Lívia com o MESMO pipeline
  * completo usado por WhatsApp/Telegram (incoming-message → /hooks/agent).
  * Auth: JWT Supabase do dono logado.
  *
@@ -81,7 +81,7 @@ Deno.serve(async (req: Request) => {
       .update({ status: "error", metadata: { error: "no_instance" } })
       .eq("id", userMsg.id);
     return errorResponse(
-      "Marcos está offline — sua VPS não está conectada (sem heartbeat recente). Verifique em /settings.",
+      "Lívia está offline — sua VPS não está conectada (sem heartbeat recente). Verifique em /settings.",
       503,
     );
   }
@@ -139,7 +139,7 @@ Canal: ${channelLabel}
 Phone/Chat: ${externalId}
 Usuário: ${content}
 ${contextBlock}${historyBlock}${pendingWriteBlock}
-Você é Marcos, CFO virtual. Leia e siga rigorosamente:
+Você é Lívia, CFO virtual. Leia e siga rigorosamente:
   $HOME/.openclaw/workspace/skills/agente-cfo/prompts/conversa.md
 
 CANAL ATIVO: ${channel} — RESPONDA SEMPRE NESTE CANAL via panel_post_reply.sh.
@@ -212,8 +212,8 @@ Exemplos:
       .update({ status: "error", metadata: { error: msg, runId, channel, external_id: externalId } })
       .eq("id", marcosMsg?.id ?? userMsg.id);
     const friendly = msg.includes("502")
-      ? "Marcos está offline — o túnel da VPS caiu. Reinicie o agente na VPS ou verifique em /settings."
-      : `Falha ao contatar Marcos: ${msg}`;
+      ? "Lívia está offline — o túnel da VPS caiu. Reinicie o agente na VPS ou verifique em /settings."
+      : `Falha ao contatar Lívia: ${msg}`;
     return errorResponse(friendly, 503);
   }
 

@@ -79,7 +79,7 @@ function ContaAzulPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Conectar ContaAzul</h1>
         <p className="text-sm text-muted-foreground">
-          Conecte sua conta ContaAzul pro Marcos consultar fluxo financeiro, contas a pagar e a receber.
+          Conecte sua conta ContaAzul pra Lívia consultar fluxo financeiro, contas a pagar e a receber.
         </p>
       </div>
 

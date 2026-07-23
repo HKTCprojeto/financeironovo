@@ -461,7 +461,7 @@ function AlertEditor({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editing ? "Editar alerta" : "Novo alerta"}</DialogTitle>
-          <DialogDescription>Marcos avisa pelos canais escolhidos quando a condição bater.</DialogDescription>
+          <DialogDescription>Lívia avisa pelos canais escolhidos quando a condição bater.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

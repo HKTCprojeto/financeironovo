@@ -441,7 +441,7 @@ function ComandoCentral() {
                     <div className="text-right">
                       <p className="text-sm font-semibold tabular-nums">{formatCurrencyBRL(d.brl)}</p>
                       <button onClick={() => navigate({ to: "/chat" })} className="text-xs text-primary hover:underline">
-                        Marcos: cobrar?
+                        Lívia: cobrar?
                       </button>
                     </div>
                   </div>

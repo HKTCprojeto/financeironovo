@@ -85,7 +85,7 @@ export function CfoWriteEventsWidget() {
     <Card className="p-4 mb-3">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold">Últimas ações via chat</h3>
-        <span className="text-[11px] text-muted-foreground">writes registrados por Marcos</span>
+        <span className="text-[11px] text-muted-foreground">writes registrados por Lívia</span>
       </div>
 
       {loading ? (

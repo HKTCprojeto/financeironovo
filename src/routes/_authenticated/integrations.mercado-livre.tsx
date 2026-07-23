@@ -79,7 +79,7 @@ function MercadoLivrePage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Conectar Mercado Livre</h1>
         <p className="text-sm text-muted-foreground">
-          Conecte sua conta Mercado Livre pro Marcos consultar pedidos, vendas e estoque.
+          Conecte sua conta Mercado Livre pra Lívia consultar pedidos, vendas e estoque.
         </p>
       </div>
 
