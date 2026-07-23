@@ -1,0 +1,1 @@
+ALTER TABLE public.instances ADD COLUMN IF NOT EXISTS connected_integrations jsonb NOT NULL DEFAULT '{}'::jsonb;
