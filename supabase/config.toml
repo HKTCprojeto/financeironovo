@@ -6,3 +6,53 @@
 # A checagem "é o admin?" é feita manualmente dentro da própria função.
 [functions.admin-invite]
 verify_jwt = false
+
+# ---------------------------------------------------------------------------
+# Functions chamadas pela VPS (OpenClaw) — autenticam por X-Panel-Token, não por
+# login de usuário. Precisam de verify_jwt=false senão o gateway barra a VPS.
+# ---------------------------------------------------------------------------
+[functions.setup-installer]
+verify_jwt = false
+[functions.instance-register]
+verify_jwt = false
+[functions.heartbeat]
+verify_jwt = false
+[functions.chat-marcos-reply]
+verify_jwt = false
+[functions.chat-pending-lookup]
+verify_jwt = false
+[functions.automation-confirm]
+verify_jwt = false
+[functions.automations-engine-poll]
+verify_jwt = false
+[functions.automations-engine-record-run]
+verify_jwt = false
+[functions.cfo-write-event]
+verify_jwt = false
+[functions.event]
+verify_jwt = false
+[functions.hooks-dedup-check]
+verify_jwt = false
+[functions.dashboard-publish-insights]
+verify_jwt = false
+[functions.dashboard-snapshot-push]
+verify_jwt = false
+[functions.llm-usage]
+verify_jwt = false
+[functions.integration-credentials-vps-list]
+verify_jwt = false
+[functions.supabase-projects-vps-list]
+verify_jwt = false
+[functions.hubspot-oauth-refresh-tokens]
+verify_jwt = false
+
+# ---------------------------------------------------------------------------
+# Webhooks de entrada (WhatsApp/Telegram) — chamados por serviços externos,
+# sem JWT de usuário. (Usados só quando ligarmos os canais.)
+# ---------------------------------------------------------------------------
+[functions.incoming-message]
+verify_jwt = false
+[functions.telegram-webhook]
+verify_jwt = false
+[functions.whatsapp-evolution-webhook]
+verify_jwt = false
