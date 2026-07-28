@@ -67,36 +67,13 @@ function LoginPage() {
     }
 
     if (/invalid login credentials/i.test(errMsg)) {
-      // Pode ser senha errada OU conta não existe — testa via signUp
-      const signUpResult = await supabase.auth.signUp({ email, password });
-
-      if (
-        signUpResult.error?.message &&
-        /already registered|user already exists/i.test(signUpResult.error.message)
-      ) {
-        setLoading(false);
-        toast.error("Email ou senha incorretos", {
-          description: "Tente novamente ou redefina sua senha.",
-        });
-        setShowResetHighlight(true);
-        return;
-      }
-
-      if (signUpResult.data.session) {
-        setLoading(false);
-        toast.success("Conta criada");
-        navigate({ to: "/" });
-        return;
-      }
-
-      if (signUpResult.data.user) {
-        setLoading(false);
-        toast.success("Conta criada", { description: "Verifique seu email para confirmar." });
-        return;
-      }
-
+      // Acesso é por convite (nada de auto-cadastro). Não revelamos se a conta
+      // existe: mensagem única para senha errada OU e-mail não cadastrado.
       setLoading(false);
-      toast.error(signUpResult.error?.message || "Falha ao criar conta");
+      toast.error("Email ou senha incorretos", {
+        description: "Se você não tem acesso, peça um convite ao administrador.",
+      });
+      setShowResetHighlight(true);
       return;
     }
 
@@ -184,7 +161,7 @@ function LoginPage() {
               Esqueci minha senha
             </Button>
             <p className="text-xs text-muted-foreground text-center pt-2">
-              Primeira vez? A conta é criada automaticamente com esses dados.
+              O acesso é por convite. Não tem conta? Peça um convite ao administrador.
             </p>
           </form>
         </CardContent>
