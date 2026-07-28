@@ -25,7 +25,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatCents } from "@/lib/financeiro";
 
 export const Route = createFileRoute("/_authenticated/pagamentos")({
-  head: () => ({ meta: [{ title: "Plano Gerencial — HKTC" }] }),
+  head: () => ({ meta: [{ title: "Pagamentos — HKTC" }] }),
   component: PagamentosPage,
 });
 
@@ -150,7 +150,7 @@ function PagamentosPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" /> Erro ao carregar o Plano Gerencial
+              <AlertTriangle className="h-5 w-5" /> Erro ao carregar os Pagamentos
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
@@ -165,7 +165,7 @@ function PagamentosPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex items-center gap-2">
         <Receipt className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold tracking-tight">Plano Gerencial</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Pagamentos</h1>
       </div>
 
       {isLoading ? (
