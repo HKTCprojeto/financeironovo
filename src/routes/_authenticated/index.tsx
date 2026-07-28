@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -52,6 +52,12 @@ import type { DashboardSnapshot, Goal } from "@/types/dashboard";
 import { CfoWriteEventsWidget } from "@/components/cfo-write-events-widget";
 
 export const Route = createFileRoute("/_authenticated/")({
+  // Home repontada para o Financeiro. O Comando Central (template Lovable)
+  // continua no código, mas não é mais a tela inicial — evita o banner de
+  // onboarding do produto "Lívia" que a HKTC não usa.
+  beforeLoad: () => {
+    throw redirect({ to: "/financeiro" });
+  },
   head: () => ({ meta: [{ title: "Painel Financeiro — Agente CFO" }] }),
   component: ComandoCentral,
 });
