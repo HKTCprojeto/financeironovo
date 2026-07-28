@@ -28,6 +28,11 @@ const ALLOWED_ORIGINS = [
   "https://financeironovo.vercel.app",
   "http://127.0.0.1:8777",
   "http://localhost:8777",
+  // dev local (Vite / TanStack Start)
+  "http://127.0.0.1:8080",
+  "http://localhost:8080",
+  "http://127.0.0.1:5173",
+  "http://localhost:5173",
 ];
 
 function corsHeaders(origin: string | null): Record<string, string> {

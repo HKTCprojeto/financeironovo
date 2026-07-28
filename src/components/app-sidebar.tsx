@@ -20,6 +20,7 @@ import {
   MessageCircle,
   Send,
   Receipt,
+  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -58,6 +59,7 @@ const channelItems = [
 ];
 
 const adminItems = [
+  { title: "Usuários", url: "/usuarios", icon: Users },
   { title: "Instâncias", url: "/instances", icon: Server },
   { title: "Observabilidade", url: "/observability", icon: Activity },
   { title: "Eventos", url: "/events", icon: ScrollText },
