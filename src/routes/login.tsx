@@ -122,9 +122,19 @@ function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
+    <main className="relative flex min-h-screen items-center justify-center px-4">
+      {/* Fundo: navio de contêineres HKTC */}
+      <div className="absolute inset-0 -z-10">
+        <img
+          src="/login-bg.webp"
+          alt=""
+          aria-hidden="true"
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-slate-900/45" />
+      </div>
       <Toaster />
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-semibold tracking-tight">Agente CFO</CardTitle>
           <CardDescription>Painel administrativo</CardDescription>
