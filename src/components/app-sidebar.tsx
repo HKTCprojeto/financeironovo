@@ -19,6 +19,7 @@ import {
   ExternalLink,
   MessageCircle,
   Send,
+  Receipt,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ import { supabase } from "@/integrations/supabase/client";
 const mainItems = [
   { title: "Painel", url: "/", icon: LayoutDashboard, exact: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
+  { title: "Plano Gerencial", url: "/pagamentos", icon: Receipt },
   { title: "Conversar com Lívia", url: "/chat", icon: MessageCircle },
   { title: "Relatórios", url: "/reports", icon: BarChart3 },
   { title: "Metas", url: "/goals", icon: Target },

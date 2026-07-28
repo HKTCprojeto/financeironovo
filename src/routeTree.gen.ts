@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
 import { Route as AuthenticatedObservabilityRouteImport } from './routes/_authenticated/observability'
 import { Route as AuthenticatedLlmUsageRouteImport } from './routes/_authenticated/llm-usage'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
@@ -81,6 +82,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedObservabilityRoute =
@@ -247,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/goals': typeof AuthenticatedGoalsRoute
   '/llm-usage': typeof AuthenticatedLlmUsageRoute
   '/observability': typeof AuthenticatedObservabilityRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/automations/$id': typeof AuthenticatedAutomationsIdRoute
@@ -281,6 +288,7 @@ export interface FileRoutesByTo {
   '/goals': typeof AuthenticatedGoalsRoute
   '/llm-usage': typeof AuthenticatedLlmUsageRoute
   '/observability': typeof AuthenticatedObservabilityRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/': typeof AuthenticatedIndexRoute
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/llm-usage': typeof AuthenticatedLlmUsageRoute
   '/_authenticated/observability': typeof AuthenticatedObservabilityRoute
+  '/_authenticated/pagamentos': typeof AuthenticatedPagamentosRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -356,6 +365,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/llm-usage'
     | '/observability'
+    | '/pagamentos'
     | '/reports'
     | '/settings'
     | '/automations/$id'
@@ -390,6 +400,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/llm-usage'
     | '/observability'
+    | '/pagamentos'
     | '/reports'
     | '/settings'
     | '/'
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/_authenticated/goals'
     | '/_authenticated/llm-usage'
     | '/_authenticated/observability'
+    | '/_authenticated/pagamentos'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/'
@@ -513,6 +525,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pagamentos': {
+      id: '/_authenticated/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/pagamentos'
+      preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/observability': {
@@ -784,6 +803,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedLlmUsageRoute: typeof AuthenticatedLlmUsageRoute
   AuthenticatedObservabilityRoute: typeof AuthenticatedObservabilityRoute
+  AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -811,6 +831,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedLlmUsageRoute: AuthenticatedLlmUsageRoute,
   AuthenticatedObservabilityRoute: AuthenticatedObservabilityRoute,
+  AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
