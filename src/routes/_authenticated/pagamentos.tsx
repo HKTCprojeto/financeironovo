@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Receipt, AlertTriangle, Search, ListTree, Wallet } from "lucide-react";
+import {
+  Receipt,
+  AlertTriangle,
+  Search,
+  ListTree,
+  Wallet,
+  ArrowUp,
+  ArrowDown,
+  ChevronsUpDown,
+  CalendarRange,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -89,8 +99,52 @@ function fmtDate(iso: string | null): string {
   return iso.split("-").reverse().join("/");
 }
 
+const MESES_ABREV = [
+  "jan",
+  "fev",
+  "mar",
+  "abr",
+  "mai",
+  "jun",
+  "jul",
+  "ago",
+  "set",
+  "out",
+  "nov",
+  "dez",
+];
+
+// 'YYYY-MM' -> 'Jul/2025'
+function fmtMesRef(mes: string): string {
+  const [ano, m] = mes.split("-");
+  const idx = Number(m) - 1;
+  const nome = MESES_ABREV[idx] ?? m;
+  return `${nome.charAt(0).toUpperCase()}${nome.slice(1)}/${ano}`;
+}
+
+// ordem lógica dos status (para ordenação da coluna)
+const STATUS_ORDER: Record<Pagamento["status"], number> = {
+  atrasado: 0,
+  a_pagar: 1,
+  previsto: 2,
+  pago: 3,
+};
+
+type SortKey =
+  | "fornecedor"
+  | "departamento"
+  | "rubrica"
+  | "tipo"
+  | "data_vencimento"
+  | "status"
+  | "valor_centavos";
+type SortDir = "asc" | "desc";
+
 function PagamentosPage() {
-  const { data, isLoading, error } = useQuery({ queryKey: ["plano-gerencial"], queryFn: fetchPlano });
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["plano-gerencial"],
+    queryFn: fetchPlano,
+  });
 
   const rubricas = data?.rubricas ?? [];
   const pagamentos = data?.pagamentos ?? [];
@@ -104,18 +158,54 @@ function PagamentosPage() {
 
   // filtros de pagamentos
   const [depto, setDepto] = useState<string>("todos");
+  const [rubricaFiltro, setRubricaFiltro] = useState<string>("todas");
+  const [mesRef, setMesRef] = useState<string>("todos");
   const [buscaPag, setBuscaPag] = useState("");
   const [buscaRub, setBuscaRub] = useState("");
 
+  // ordenação da tabela de pagamentos
+  const [sortKey, setSortKey] = useState<SortKey>("valor_centavos");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  function toggleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      // valores começam decrescentes; texto/data começam crescentes
+      setSortDir(key === "valor_centavos" ? "desc" : "asc");
+    }
+  }
+
   const deptos = useMemo(
-    () => Array.from(new Set(pagamentos.map((p) => p.departamento).filter(Boolean))).sort() as string[],
+    () =>
+      Array.from(new Set(pagamentos.map((p) => p.departamento).filter(Boolean))).sort() as string[],
     [pagamentos],
   );
 
+  // meses de competência presentes (desc, mais recente primeiro)
+  const mesesRef = useMemo(
+    () =>
+      Array.from(new Set(pagamentos.map((p) => p.mes_ref).filter(Boolean)))
+        .sort()
+        .reverse() as string[],
+    [pagamentos],
+  );
+
+  // rubricas presentes nos pagamentos (para o filtro), ordenadas por nome
+  const rubricasNosPagamentos = useMemo(() => {
+    const codigos = Array.from(new Set(pagamentos.map((p) => p.rubrica_codigo).filter(Boolean)));
+    return codigos
+      .map((c) => ({ codigo: c, nome: rubricaNome.get(c) ?? c }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  }, [pagamentos, rubricaNome]);
+
   const pagFiltrados = useMemo(() => {
     const q = buscaPag.trim().toLowerCase();
-    return pagamentos.filter((p) => {
+    const filtrados = pagamentos.filter((p) => {
       if (depto !== "todos" && p.departamento !== depto) return false;
+      if (rubricaFiltro !== "todas" && p.rubrica_codigo !== rubricaFiltro) return false;
+      if (mesRef !== "todos" && p.mes_ref !== mesRef) return false;
       if (!q) return true;
       return (
         p.fornecedor.toLowerCase().includes(q) ||
@@ -124,7 +214,32 @@ function PagamentosPage() {
         (rubricaNome.get(p.rubrica_codigo) ?? "").toLowerCase().includes(q)
       );
     });
-  }, [pagamentos, depto, buscaPag, rubricaNome]);
+
+    const dir = sortDir === "asc" ? 1 : -1;
+    const cmp = (a: Pagamento, b: Pagamento): number => {
+      switch (sortKey) {
+        case "valor_centavos":
+          return (a.valor_centavos - b.valor_centavos) * dir;
+        case "status":
+          return (STATUS_ORDER[a.status] - STATUS_ORDER[b.status]) * dir;
+        case "data_vencimento":
+          return a.data_vencimento.localeCompare(b.data_vencimento) * dir;
+        case "rubrica": {
+          const an = rubricaNome.get(a.rubrica_codigo) ?? a.rubrica_codigo;
+          const bn = rubricaNome.get(b.rubrica_codigo) ?? b.rubrica_codigo;
+          return an.localeCompare(bn, "pt-BR") * dir;
+        }
+        case "departamento":
+          return (a.departamento ?? "").localeCompare(b.departamento ?? "", "pt-BR") * dir;
+        case "tipo":
+          return a.tipo.localeCompare(b.tipo) * dir;
+        case "fornecedor":
+        default:
+          return a.fornecedor.localeCompare(b.fornecedor, "pt-BR") * dir;
+      }
+    };
+    return [...filtrados].sort(cmp);
+  }, [pagamentos, depto, rubricaFiltro, mesRef, buscaPag, rubricaNome, sortKey, sortDir]);
 
   const rubFiltradas = useMemo(() => {
     const q = buscaRub.trim().toLowerCase();
@@ -141,8 +256,12 @@ function PagamentosPage() {
 
   // KPIs (sobre os pagamentos filtrados)
   const totalCents = pagFiltrados.reduce((s, p) => s + p.valor_centavos, 0);
-  const totalFixo = pagFiltrados.filter((p) => p.tipo === "fixo").reduce((s, p) => s + p.valor_centavos, 0);
-  const totalVar = pagFiltrados.filter((p) => p.tipo === "variavel").reduce((s, p) => s + p.valor_centavos, 0);
+  const totalFixo = pagFiltrados
+    .filter((p) => p.tipo === "fixo")
+    .reduce((s, p) => s + p.valor_centavos, 0);
+  const totalVar = pagFiltrados
+    .filter((p) => p.tipo === "variavel")
+    .reduce((s, p) => s + p.valor_centavos, 0);
 
   if (error) {
     return (
@@ -184,9 +303,21 @@ function PagamentosPage() {
           {/* ---------------- PAGAMENTOS ---------------- */}
           <TabsContent value="pagamentos" className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-3">
-              <KpiCard titulo="Total a pagar" valor={totalCents} sub={`${pagFiltrados.length} lançamentos`} />
-              <KpiCard titulo="Fixos" valor={totalFixo} sub={`${pagFiltrados.filter((p) => p.tipo === "fixo").length} lançamentos`} />
-              <KpiCard titulo="Variáveis" valor={totalVar} sub={`${pagFiltrados.filter((p) => p.tipo === "variavel").length} lançamentos`} />
+              <KpiCard
+                titulo="Total a pagar"
+                valor={totalCents}
+                sub={`${pagFiltrados.length} lançamentos`}
+              />
+              <KpiCard
+                titulo="Fixos"
+                valor={totalFixo}
+                sub={`${pagFiltrados.filter((p) => p.tipo === "fixo").length} lançamentos`}
+              />
+              <KpiCard
+                titulo="Variáveis"
+                valor={totalVar}
+                sub={`${pagFiltrados.filter((p) => p.tipo === "variavel").length} lançamentos`}
+              />
             </div>
 
             <Card>
@@ -194,6 +325,20 @@ function PagamentosPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <CardTitle className="text-base">Pagamentos</CardTitle>
                   <div className="flex flex-wrap items-center gap-2">
+                    <Select value={mesRef} onValueChange={setMesRef}>
+                      <SelectTrigger className="w-[150px]">
+                        <CalendarRange className="mr-1 h-3.5 w-3.5 text-muted-foreground" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todos os meses</SelectItem>
+                        {mesesRef.map((m) => (
+                          <SelectItem key={m} value={m}>
+                            {fmtMesRef(m)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Select value={depto} onValueChange={setDepto}>
                       <SelectTrigger className="w-[170px]">
                         <SelectValue />
@@ -203,6 +348,19 @@ function PagamentosPage() {
                         {deptos.map((d) => (
                           <SelectItem key={d} value={d}>
                             {d}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={rubricaFiltro} onValueChange={setRubricaFiltro}>
+                      <SelectTrigger className="w-[220px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todas">Todas as rubricas</SelectItem>
+                        {rubricasNosPagamentos.map((r) => (
+                          <SelectItem key={r.codigo} value={r.codigo}>
+                            {r.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -221,19 +379,71 @@ function PagamentosPage() {
               </CardHeader>
               <CardContent>
                 {pagFiltrados.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhum pagamento encontrado com esses filtros.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum pagamento encontrado com esses filtros.
+                  </p>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Fornecedor</TableHead>
-                          <TableHead>Departamento</TableHead>
-                          <TableHead>Rubrica</TableHead>
-                          <TableHead>Tipo</TableHead>
-                          <TableHead>Vencimento</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Valor</TableHead>
+                          <SortHead
+                            sk="fornecedor"
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onSort={toggleSort}
+                          >
+                            Fornecedor
+                          </SortHead>
+                          <SortHead
+                            sk="departamento"
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onSort={toggleSort}
+                          >
+                            Departamento
+                          </SortHead>
+                          <SortHead
+                            sk="rubrica"
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onSort={toggleSort}
+                          >
+                            Rubrica
+                          </SortHead>
+                          <SortHead
+                            sk="tipo"
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onSort={toggleSort}
+                          >
+                            Tipo
+                          </SortHead>
+                          <SortHead
+                            sk="data_vencimento"
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onSort={toggleSort}
+                          >
+                            Vencimento
+                          </SortHead>
+                          <SortHead
+                            sk="status"
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onSort={toggleSort}
+                          >
+                            Status
+                          </SortHead>
+                          <SortHead
+                            sk="valor_centavos"
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            onSort={toggleSort}
+                            align="right"
+                          >
+                            Valor
+                          </SortHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -244,7 +454,9 @@ function PagamentosPage() {
                               <TableCell className="font-medium">
                                 {p.fornecedor}
                                 {p.servico && (
-                                  <span className="block text-xs text-muted-foreground">{p.servico}</span>
+                                  <span className="block text-xs text-muted-foreground">
+                                    {p.servico}
+                                  </span>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -257,7 +469,9 @@ function PagamentosPage() {
                                 )}
                               </TableCell>
                               <TableCell className="max-w-[220px]">
-                                <span className="text-sm">{rubricaNome.get(p.rubrica_codigo) ?? p.rubrica_codigo}</span>
+                                <span className="text-sm">
+                                  {rubricaNome.get(p.rubrica_codigo) ?? p.rubrica_codigo}
+                                </span>
                                 <span className="block font-mono text-[10px] text-muted-foreground">
                                   {p.rubrica_codigo}
                                 </span>
@@ -267,9 +481,13 @@ function PagamentosPage() {
                                   {p.tipo === "fixo" ? "Fixo" : "Variável"}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="whitespace-nowrap">{fmtDate(p.data_vencimento)}</TableCell>
+                              <TableCell className="whitespace-nowrap">
+                                {fmtDate(p.data_vencimento)}
+                              </TableCell>
                               <TableCell>
-                                <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium ${st.cls}`}>
+                                <span
+                                  className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium ${st.cls}`}
+                                >
                                   {st.label}
                                 </span>
                               </TableCell>
@@ -322,11 +540,19 @@ function PagamentosPage() {
                     <TableBody>
                       {rubFiltradas.map((r) => (
                         <TableRow key={r.codigo}>
-                          <TableCell className="whitespace-nowrap font-mono text-xs">{r.codigo}</TableCell>
+                          <TableCell className="whitespace-nowrap font-mono text-xs">
+                            {r.codigo}
+                          </TableCell>
                           <TableCell className="font-medium">{r.nome}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{r.nivel1_nome}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{r.nivel2_nome}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{r.nivel3_nome}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {r.nivel1_nome}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {r.nivel2_nome}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {r.nivel3_nome}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -338,6 +564,46 @@ function PagamentosPage() {
         </Tabs>
       )}
     </div>
+  );
+}
+
+function SortHead({
+  children,
+  sk,
+  sortKey,
+  sortDir,
+  onSort,
+  align = "left",
+}: {
+  children: ReactNode;
+  sk: SortKey;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (k: SortKey) => void;
+  align?: "left" | "right";
+}) {
+  const active = sk === sortKey;
+  return (
+    <TableHead className={align === "right" ? "text-right" : undefined}>
+      <button
+        type="button"
+        onClick={() => onSort(sk)}
+        className={`inline-flex items-center gap-1 select-none hover:text-foreground ${
+          active ? "text-foreground font-semibold" : "text-muted-foreground"
+        } ${align === "right" ? "flex-row-reverse" : ""}`}
+      >
+        {children}
+        {active ? (
+          sortDir === "asc" ? (
+            <ArrowUp className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5" />
+          )
+        ) : (
+          <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+        )}
+      </button>
+    </TableHead>
   );
 }
 
