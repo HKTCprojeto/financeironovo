@@ -52,7 +52,12 @@ function ResetPasswordPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    // Marca senha_definida=true: libera o acesso ao painel (a trava de rota
+    // exige essa flag). Convidado só passa depois de definir a senha aqui.
+    const { error } = await supabase.auth.updateUser({
+      password,
+      data: { senha_definida: true },
+    });
     setLoading(false);
     if (error) {
       toast.error(error.message);

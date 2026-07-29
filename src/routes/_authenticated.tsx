@@ -29,6 +29,12 @@ export const Route = createFileRoute("/_authenticated")({
       await supabase.auth.signOut();
       throw redirect({ to: "/login" });
     }
+    // Acesso por convite: a pessoa é logada ao clicar no link, mas NÃO pode
+    // ver o painel antes de definir a própria senha. A flag senha_definida
+    // vira true em /reset-password. Sem ela (convidado novo), força o reset.
+    if (u.user.user_metadata?.senha_definida !== true) {
+      throw redirect({ to: "/reset-password" });
+    }
   },
   component: AuthenticatedLayout,
 });
