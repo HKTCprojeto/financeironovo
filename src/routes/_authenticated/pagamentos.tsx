@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Receipt,
   AlertTriangle,
@@ -32,6 +33,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { formatCents } from "@/lib/financeiro";
 
 export const Route = createFileRoute("/_authenticated/pagamentos")({
@@ -140,14 +151,67 @@ type SortKey =
   | "valor_centavos";
 type SortDir = "asc" | "desc";
 
+function hojeISO(): string {
+  return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+}
+
+// Status efetivo exibido: "Vencido" (atrasado) é automático quando está
+// "A pagar" e já passou do vencimento. "Pago" e "Vencido" manual mandam sobre a data.
+function statusEfetivo(p: Pagamento, hoje: string): Pagamento["status"] {
+  if (p.status === "pago" || p.status === "atrasado") return p.status;
+  // a_pagar / previsto: vira atrasado se venceu
+  if (p.data_vencimento < hoje) return "atrasado";
+  return "a_pagar";
+}
+
+// opções do seletor de status (valores gravados no banco)
+const STATUS_OPCOES: { value: Pagamento["status"]; label: string }[] = [
+  { value: "a_pagar", label: "A pagar" },
+  { value: "pago", label: "Pago" },
+  { value: "atrasado", label: "Vencido" },
+];
+
 function PagamentosPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["plano-gerencial"],
     queryFn: fetchPlano,
   });
 
+  const queryClient = useQueryClient();
+  const hoje = hojeISO();
+
   const rubricas = data?.rubricas ?? [];
   const pagamentos = data?.pagamentos ?? [];
+
+  // ---- escrita: alterar status / data de pagamento ----
+  const updateStatus = useMutation({
+    mutationFn: async (vars: {
+      id: string;
+      status: Pagamento["status"];
+      data_pagamento: string | null;
+    }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+      const { data: rows, error: err } = await sb
+        .from("fin_pagamentos")
+        .update({ status: vars.status, data_pagamento: vars.data_pagamento })
+        .eq("id", vars.id)
+        .select("id");
+      if (err) throw err;
+      if (!rows || rows.length === 0) {
+        throw new Error(
+          "Nenhuma linha alterada — verifique se a policy de UPDATE foi aplicada no Supabase.",
+        );
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["plano-gerencial"] });
+      toast.success("Status atualizado");
+    },
+    onError: (e) => {
+      toast.error("Não foi possível atualizar", { description: (e as Error).message });
+    },
+  });
 
   // mapa codigo -> nome da rubrica (para exibir nome legível no pagamento)
   const rubricaNome = useMemo(() => {
@@ -221,7 +285,9 @@ function PagamentosPage() {
         case "valor_centavos":
           return (a.valor_centavos - b.valor_centavos) * dir;
         case "status":
-          return (STATUS_ORDER[a.status] - STATUS_ORDER[b.status]) * dir;
+          return (
+            (STATUS_ORDER[statusEfetivo(a, hoje)] - STATUS_ORDER[statusEfetivo(b, hoje)]) * dir
+          );
         case "data_vencimento":
           return a.data_vencimento.localeCompare(b.data_vencimento) * dir;
         case "rubrica": {
@@ -239,7 +305,7 @@ function PagamentosPage() {
       }
     };
     return [...filtrados].sort(cmp);
-  }, [pagamentos, depto, rubricaFiltro, mesRef, buscaPag, rubricaNome, sortKey, sortDir]);
+  }, [pagamentos, depto, rubricaFiltro, mesRef, buscaPag, rubricaNome, sortKey, sortDir, hoje]);
 
   const rubFiltradas = useMemo(() => {
     const q = buscaRub.trim().toLowerCase();
@@ -448,7 +514,6 @@ function PagamentosPage() {
                       </TableHeader>
                       <TableBody>
                         {pagFiltrados.map((p) => {
-                          const st = STATUS_STYLE[p.status];
                           return (
                             <TableRow key={p.id}>
                               <TableCell className="font-medium">
@@ -485,11 +550,17 @@ function PagamentosPage() {
                                 {fmtDate(p.data_vencimento)}
                               </TableCell>
                               <TableCell>
-                                <span
-                                  className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium ${st.cls}`}
-                                >
-                                  {st.label}
-                                </span>
+                                <StatusCell
+                                  pagamento={p}
+                                  efetivo={statusEfetivo(p, hoje)}
+                                  hoje={hoje}
+                                  saving={
+                                    updateStatus.isPending && updateStatus.variables?.id === p.id
+                                  }
+                                  onChange={(status, data_pagamento) =>
+                                    updateStatus.mutate({ id: p.id, status, data_pagamento })
+                                  }
+                                />
                               </TableCell>
                               <TableCell className="whitespace-nowrap text-right font-mono">
                                 {formatCents(p.valor_centavos)}
@@ -564,6 +635,93 @@ function PagamentosPage() {
         </Tabs>
       )}
     </div>
+  );
+}
+
+function StatusCell({
+  pagamento,
+  efetivo,
+  hoje,
+  saving,
+  onChange,
+}: {
+  pagamento: Pagamento;
+  efetivo: Pagamento["status"];
+  hoje: string;
+  saving: boolean;
+  onChange: (status: Pagamento["status"], data_pagamento: string | null) => void;
+}) {
+  const [dlgOpen, setDlgOpen] = useState(false);
+  const [dataPag, setDataPag] = useState<string>(pagamento.data_pagamento ?? hoje);
+
+  const st = STATUS_STYLE[efetivo];
+
+  function handleSelect(v: string) {
+    const novo = v as Pagamento["status"];
+    if (novo === efetivo) return;
+    if (novo === "pago") {
+      setDataPag(pagamento.data_pagamento ?? hoje); // data atual, mas editável
+      setDlgOpen(true);
+      return;
+    }
+    onChange(novo, null); // A pagar / Vencido limpam a data de pagamento
+  }
+
+  function confirmarPago() {
+    onChange("pago", dataPag);
+    setDlgOpen(false);
+  }
+
+  return (
+    <>
+      <Select value={efetivo} onValueChange={handleSelect} disabled={saving}>
+        <SelectTrigger
+          className={`h-7 w-[128px] rounded-full border px-2.5 py-0 text-[11px] font-medium ${st.cls}`}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPCOES.map((o) => (
+            <SelectItem key={o.value} value={o.value} className="text-xs">
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {efetivo === "pago" && pagamento.data_pagamento && (
+        <span className="mt-0.5 block text-[10px] text-muted-foreground">
+          pago em {fmtDate(pagamento.data_pagamento)}
+        </span>
+      )}
+
+      <Dialog open={dlgOpen} onOpenChange={setDlgOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Marcar como pago</DialogTitle>
+            <DialogDescription>
+              {pagamento.fornecedor} · {formatCents(pagamento.valor_centavos)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 py-2">
+            <Label htmlFor="data-pagamento">Data de pagamento</Label>
+            <Input
+              id="data-pagamento"
+              type="date"
+              value={dataPag}
+              onChange={(e) => setDataPag(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDlgOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmarPago} disabled={!dataPag}>
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
