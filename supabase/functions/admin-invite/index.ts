@@ -111,16 +111,21 @@ Deno.serve(async (req: Request) => {
   if (action === "invite") {
     const email = String(body.email ?? "").trim().toLowerCase();
     if (!isEmail(email)) return json({ error: "E-mail inválido." }, 400, cors);
-    const { data, error } = await admin.auth.admin.generateLink({
-      type: "invite", email, options: { redirectTo },
-    });
+    // Envia o e-mail de convite AUTOMATICAMENTE (usa o SMTP configurado no
+    // Supabase Auth — remetente "Agente CFO - Acesso" vem do Sender name do SMTP).
+    const { error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
     if (error) {
       const already = /already|registered|exists/i.test(error.message);
-      return json({ error: already ? "Este e-mail já tem conta." : error.message }, 400, cors);
+      if (already) return json({ error: "Este e-mail já tem conta." }, 400, cors);
+      // Fallback: se o envio falhar (ex.: SMTP ainda não configurado), devolve
+      // um link p/ envio manual, sem travar o admin.
+      const { data: gl } = await admin.auth.admin.generateLink({
+        type: "invite", email, options: { redirectTo },
+      });
+      const link = (gl as any)?.properties?.action_link ?? null;
+      return json({ email, sent: false, action_link: link, warn: error.message }, 200, cors);
     }
-    const link = (data as any)?.properties?.action_link ?? null;
-    if (!link) return json({ error: "Não foi possível gerar o link." }, 500, cors);
-    return json({ email, action_link: link }, 200, cors);
+    return json({ email, sent: true }, 200, cors);
   }
 
   // ---------- reenviar acesso (gera novo link p/ definir senha) ----------

@@ -104,9 +104,21 @@ function UsuariosPage() {
     }
     setInviting(true);
     try {
-      const r = await callAdmin<{ email: string; action_link: string }>({ action: "invite", email });
+      const r = await callAdmin<{ email: string; sent?: boolean; action_link?: string }>({
+        action: "invite",
+        email,
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
       setInviteEmail("");
-      setLinkModal({ titulo: "Convite gerado", email: r.email, link: r.action_link });
+      if (r.sent) {
+        toast.success(`Convite enviado por e-mail para ${r.email}`, {
+          description: "A pessoa recebe o link para definir a senha.",
+        });
+      } else if (r.action_link) {
+        // E-mail não saiu (ex.: SMTP não configurado) — oferece o link manual.
+        toast.warning("Não consegui enviar o e-mail — envie o link manualmente.");
+        setLinkModal({ titulo: "Convite gerado (envie manualmente)", email: r.email, link: r.action_link });
+      }
       reload();
     } catch (e) {
       toast.error((e as Error).message);
@@ -118,7 +130,11 @@ function UsuariosPage() {
   const reenviar = async (u: AdminUser) => {
     setWorking(u.id);
     try {
-      const r = await callAdmin<{ email: string; action_link: string }>({ action: "resend", email: u.email });
+      const r = await callAdmin<{ email: string; action_link: string }>({
+        action: "resend",
+        email: u.email,
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
       setLinkModal({ titulo: "Link de acesso gerado", email: r.email, link: r.action_link });
     } catch (e) {
       toast.error((e as Error).message);
@@ -203,7 +219,8 @@ function UsuariosPage() {
         </CardHeader>
         <CardContent>
           <p className="mb-3 text-sm text-muted-foreground">
-            Gere um link de convite e envie para a pessoa. Ao abrir, ela define a própria senha e ganha acesso.
+            Um e-mail de convite é enviado automaticamente para a pessoa (remetente
+            <b> Agente CFO - Acesso</b>). Ao abrir o link, ela define a própria senha e ganha acesso.
             O convite é individual, vinculado ao e-mail.
           </p>
           <div className="flex flex-wrap items-end gap-2">
