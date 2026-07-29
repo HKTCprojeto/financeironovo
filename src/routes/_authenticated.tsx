@@ -19,6 +19,16 @@ export const Route = createFileRoute("/_authenticated")({
       if (hasActiveChatStream()) return;
       throw redirect({ to: "/login" });
     }
+    // getSession() só valida o JWT localmente (assinatura + validade) e NÃO
+    // detecta conta deletada/token revogado — o JWT é stateless e continua
+    // válido até expirar. getUser() pergunta ao servidor: se a conta não
+    // existe mais, expulsa na hora (fecha o furo de "acesso após exclusão").
+    const { data: u, error } = await supabase.auth.getUser();
+    if (error || !u?.user) {
+      if (hasActiveChatStream()) return;
+      await supabase.auth.signOut();
+      throw redirect({ to: "/login" });
+    }
   },
   component: AuthenticatedLayout,
 });
