@@ -24,6 +24,7 @@ import { Route as AuthenticatedLlmUsageRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
+import { Route as AuthenticatedComandoCentralRouteImport } from './routes/_authenticated/comando-central'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
@@ -121,6 +122,12 @@ const AuthenticatedEventsRoute = AuthenticatedEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedComandoCentralRoute =
+  AuthenticatedComandoCentralRouteImport.update({
+    id: '/comando-central',
+    path: '/comando-central',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -254,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/chat': typeof AuthenticatedChatRoute
+  '/comando-central': typeof AuthenticatedComandoCentralRoute
   '/events': typeof AuthenticatedEventsRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/goals': typeof AuthenticatedGoalsRoute
@@ -290,6 +298,7 @@ export interface FileRoutesByTo {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/chat': typeof AuthenticatedChatRoute
+  '/comando-central': typeof AuthenticatedComandoCentralRoute
   '/events': typeof AuthenticatedEventsRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/goals': typeof AuthenticatedGoalsRoute
@@ -329,6 +338,7 @@ export interface FileRoutesById {
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
+  '/_authenticated/comando-central': typeof AuthenticatedComandoCentralRoute
   '/_authenticated/events': typeof AuthenticatedEventsRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/audit'
     | '/chat'
+    | '/comando-central'
     | '/events'
     | '/financeiro'
     | '/goals'
@@ -405,6 +416,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/audit'
     | '/chat'
+    | '/comando-central'
     | '/events'
     | '/financeiro'
     | '/goals'
@@ -443,6 +455,7 @@ export interface FileRouteTypes {
     | '/_authenticated/alerts'
     | '/_authenticated/audit'
     | '/_authenticated/chat'
+    | '/_authenticated/comando-central'
     | '/_authenticated/events'
     | '/_authenticated/financeiro'
     | '/_authenticated/goals'
@@ -586,6 +599,13 @@ declare module '@tanstack/react-router' {
       path: '/events'
       fullPath: '/events'
       preLoaderRoute: typeof AuthenticatedEventsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/comando-central': {
+      id: '/_authenticated/comando-central'
+      path: '/comando-central'
+      fullPath: '/comando-central'
+      preLoaderRoute: typeof AuthenticatedComandoCentralRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/chat': {
@@ -817,6 +837,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
+  AuthenticatedComandoCentralRoute: typeof AuthenticatedComandoCentralRoute
   AuthenticatedEventsRoute: typeof AuthenticatedEventsRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
@@ -846,6 +867,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedChatRoute: AuthenticatedChatRoute,
+  AuthenticatedComandoCentralRoute: AuthenticatedComandoCentralRoute,
   AuthenticatedEventsRoute: AuthenticatedEventsRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
