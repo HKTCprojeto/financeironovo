@@ -22,6 +22,7 @@ import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authentic
 import { Route as AuthenticatedObservabilityRouteImport } from './routes/_authenticated/observability'
 import { Route as AuthenticatedLlmUsageRouteImport } from './routes/_authenticated/llm-usage'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
+import { Route as AuthenticatedFinanceiroDespesasRouteImport } from './routes/_authenticated/financeiro-despesas'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
 import { Route as AuthenticatedComandoCentralRouteImport } from './routes/_authenticated/comando-central'
@@ -112,6 +113,12 @@ const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
   path: '/goals',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedFinanceiroDespesasRoute =
+  AuthenticatedFinanceiroDespesasRouteImport.update({
+    id: '/financeiro-despesas',
+    path: '/financeiro-despesas',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
@@ -264,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/comando-central': typeof AuthenticatedComandoCentralRoute
   '/events': typeof AuthenticatedEventsRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/financeiro-despesas': typeof AuthenticatedFinanceiroDespesasRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/llm-usage': typeof AuthenticatedLlmUsageRoute
   '/observability': typeof AuthenticatedObservabilityRoute
@@ -301,6 +309,7 @@ export interface FileRoutesByTo {
   '/comando-central': typeof AuthenticatedComandoCentralRoute
   '/events': typeof AuthenticatedEventsRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/financeiro-despesas': typeof AuthenticatedFinanceiroDespesasRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/llm-usage': typeof AuthenticatedLlmUsageRoute
   '/observability': typeof AuthenticatedObservabilityRoute
@@ -341,6 +350,7 @@ export interface FileRoutesById {
   '/_authenticated/comando-central': typeof AuthenticatedComandoCentralRoute
   '/_authenticated/events': typeof AuthenticatedEventsRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/_authenticated/financeiro-despesas': typeof AuthenticatedFinanceiroDespesasRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/llm-usage': typeof AuthenticatedLlmUsageRoute
   '/_authenticated/observability': typeof AuthenticatedObservabilityRoute
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/comando-central'
     | '/events'
     | '/financeiro'
+    | '/financeiro-despesas'
     | '/goals'
     | '/llm-usage'
     | '/observability'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/comando-central'
     | '/events'
     | '/financeiro'
+    | '/financeiro-despesas'
     | '/goals'
     | '/llm-usage'
     | '/observability'
@@ -458,6 +470,7 @@ export interface FileRouteTypes {
     | '/_authenticated/comando-central'
     | '/_authenticated/events'
     | '/_authenticated/financeiro'
+    | '/_authenticated/financeiro-despesas'
     | '/_authenticated/goals'
     | '/_authenticated/llm-usage'
     | '/_authenticated/observability'
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       path: '/goals'
       fullPath: '/goals'
       preLoaderRoute: typeof AuthenticatedGoalsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/financeiro-despesas': {
+      id: '/_authenticated/financeiro-despesas'
+      path: '/financeiro-despesas'
+      fullPath: '/financeiro-despesas'
+      preLoaderRoute: typeof AuthenticatedFinanceiroDespesasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/financeiro': {
@@ -840,6 +860,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedComandoCentralRoute: typeof AuthenticatedComandoCentralRoute
   AuthenticatedEventsRoute: typeof AuthenticatedEventsRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
+  AuthenticatedFinanceiroDespesasRoute: typeof AuthenticatedFinanceiroDespesasRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedLlmUsageRoute: typeof AuthenticatedLlmUsageRoute
   AuthenticatedObservabilityRoute: typeof AuthenticatedObservabilityRoute
@@ -870,6 +891,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedComandoCentralRoute: AuthenticatedComandoCentralRoute,
   AuthenticatedEventsRoute: AuthenticatedEventsRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
+  AuthenticatedFinanceiroDespesasRoute: AuthenticatedFinanceiroDespesasRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedLlmUsageRoute: AuthenticatedLlmUsageRoute,
   AuthenticatedObservabilityRoute: AuthenticatedObservabilityRoute,
