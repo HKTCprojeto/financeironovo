@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -12,6 +12,10 @@ import {
   ArrowDown,
   ChevronsUpDown,
   CalendarRange,
+  Plus,
+  CopyPlus,
+  Trash2,
+  Check,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +39,17 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +58,17 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { formatCents } from "@/lib/financeiro";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { formatCents, parseBRLToCents } from "@/lib/financeiro";
 
 export const Route = createFileRoute("/_authenticated/pagamentos")({
   head: () => ({ meta: [{ title: "Pagamentos — HKTC" }] }),
@@ -171,6 +196,51 @@ const STATUS_OPCOES: { value: Pagamento["status"]; label: string }[] = [
   { value: "atrasado", label: "Vencido" },
 ];
 
+// 'YYYY-MM' -> próximo mês 'YYYY-MM'
+function proxMesRef(mes: string): string {
+  const [a, m] = mes.split("-").map(Number);
+  return m >= 12 ? `${a + 1}-01` : `${a}-${String(m + 1).padStart(2, "0")}`;
+}
+
+// último dia do mês 1-based
+function ultimoDia(ano: number, mes1a12: number): number {
+  return new Date(ano, mes1a12, 0).getDate();
+}
+
+// data de vencimento no mês, com o dia (limitado ao último dia do mês)
+function vencimentoNoMes(mesRef: string, dia: number): string {
+  const [a, m] = mesRef.split("-").map(Number);
+  const d = Math.min(Math.max(1, dia), ultimoDia(a, m));
+  return `${mesRef}-${String(d).padStart(2, "0")}`;
+}
+
+// formulário de novo pagamento
+type FormPag = {
+  fornecedor: string;
+  servico: string;
+  descricao: string;
+  departamento: string;
+  valorStr: string;
+  data_vencimento: string;
+  tipo: "fixo" | "variavel";
+  status: Pagamento["status"];
+  rubrica_codigo: string;
+};
+
+function formVazio(hoje: string): FormPag {
+  return {
+    fornecedor: "",
+    servico: "",
+    descricao: "",
+    departamento: "",
+    valorStr: "",
+    data_vencimento: hoje,
+    tipo: "fixo",
+    status: "a_pagar",
+    rubrica_codigo: "",
+  };
+}
+
 function PagamentosPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["plano-gerencial"],
@@ -211,6 +281,124 @@ function PagamentosPage() {
     onError: (e) => {
       toast.error("Não foi possível atualizar", { description: (e as Error).message });
     },
+  });
+
+  // ---- seleção em massa + escrita (novo / duplicar / excluir) ----
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [novoOpen, setNovoOpen] = useState(false);
+  const [confirmDelOpen, setConfirmDelOpen] = useState(false);
+
+  const invalidar = () => queryClient.invalidateQueries({ queryKey: ["plano-gerencial"] });
+
+  const insertPagamento = useMutation({
+    mutationFn: async (f: FormPag) => {
+      const cents = parseBRLToCents(f.valorStr);
+      if (cents == null) throw new Error("Valor inválido");
+      if (!f.fornecedor.trim()) throw new Error("Informe o fornecedor");
+      if (!f.rubrica_codigo) throw new Error("Escolha a rubrica");
+      if (!f.data_vencimento) throw new Error("Informe o vencimento");
+      const mes_ref = f.data_vencimento.slice(0, 7);
+      const dia = Number(f.data_vencimento.slice(8, 10));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+      const { data: rows, error: err } = await sb
+        .from("fin_pagamentos")
+        .insert({
+          departamento: f.departamento.trim() || null,
+          fornecedor: f.fornecedor.trim(),
+          servico: f.servico.trim() || null,
+          descricao: f.descricao.trim() || null,
+          valor_centavos: cents,
+          data_vencimento: f.data_vencimento,
+          data_pagamento: f.status === "pago" ? hoje : null,
+          dia_vencimento: dia,
+          tipo: f.tipo,
+          periodicidade: "mensal",
+          status: f.status,
+          rubrica_codigo: f.rubrica_codigo,
+          mes_ref,
+          origem: "manual",
+        })
+        .select("id");
+      if (err) throw err;
+      if (!rows || rows.length === 0)
+        throw new Error(
+          "Nada inserido — verifique se a policy de INSERT foi aplicada no Supabase.",
+        );
+    },
+    onSuccess: () => {
+      invalidar();
+      toast.success("Pagamento cadastrado");
+      setNovoOpen(false);
+    },
+    onError: (e) =>
+      toast.error("Não foi possível cadastrar", { description: (e as Error).message }),
+  });
+
+  const duplicarSel = useMutation({
+    mutationFn: async (itens: Pagamento[]) => {
+      const novos = itens.map((p) => {
+        const dia = p.dia_vencimento ?? Number(p.data_vencimento.slice(8, 10));
+        const mes_ref = proxMesRef(p.mes_ref);
+        return {
+          departamento: p.departamento,
+          fornecedor: p.fornecedor,
+          servico: p.servico,
+          descricao: p.descricao,
+          valor_centavos: p.valor_centavos,
+          data_vencimento: vencimentoNoMes(mes_ref, dia),
+          data_pagamento: null,
+          dia_vencimento: dia,
+          tipo: p.tipo,
+          periodicidade: p.periodicidade,
+          status: "a_pagar" as const,
+          rubrica_codigo: p.rubrica_codigo,
+          conta_contabil: p.conta_contabil,
+          mes_ref,
+          origem: "duplicado",
+        };
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+      const { data: rows, error: err } = await sb.from("fin_pagamentos").insert(novos).select("id");
+      if (err) throw err;
+      if (!rows || rows.length === 0)
+        throw new Error(
+          "Nada duplicado — verifique se a policy de INSERT foi aplicada no Supabase.",
+        );
+      return rows.length as number;
+    },
+    onSuccess: (n) => {
+      invalidar();
+      toast.success(`${n} lançamento(s) duplicado(s) para o próximo mês`);
+      setSelectedIds(new Set());
+    },
+    onError: (e) => toast.error("Não foi possível duplicar", { description: (e as Error).message }),
+  });
+
+  const excluirSel = useMutation({
+    mutationFn: async (ids: string[]) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+      const { data: rows, error: err } = await sb
+        .from("fin_pagamentos")
+        .delete()
+        .in("id", ids)
+        .select("id");
+      if (err) throw err;
+      if (!rows || rows.length === 0)
+        throw new Error(
+          "Nada excluído — verifique se a policy de DELETE foi aplicada no Supabase.",
+        );
+      return rows.length as number;
+    },
+    onSuccess: (n) => {
+      invalidar();
+      toast.success(`${n} pagamento(s) excluído(s)`);
+      setSelectedIds(new Set());
+      setConfirmDelOpen(false);
+    },
+    onError: (e) => toast.error("Não foi possível excluir", { description: (e as Error).message }),
   });
 
   // mapa codigo -> nome da rubrica (para exibir nome legível no pagamento)
@@ -306,6 +494,30 @@ function PagamentosPage() {
     };
     return [...filtrados].sort(cmp);
   }, [pagamentos, depto, rubricaFiltro, mesRef, buscaPag, rubricaNome, sortKey, sortDir, hoje]);
+
+  // seleção (sobre os filtrados)
+  const idsFiltrados = pagFiltrados.map((p) => p.id);
+  const nSel = selectedIds.size;
+  const todosSel = idsFiltrados.length > 0 && idsFiltrados.every((id) => selectedIds.has(id));
+  const algunsSel = idsFiltrados.some((id) => selectedIds.has(id));
+  const selPagamentos = pagamentos.filter((p) => selectedIds.has(p.id));
+
+  function toggleTodos() {
+    setSelectedIds((prev) => {
+      const n = new Set(prev);
+      if (todosSel) idsFiltrados.forEach((id) => n.delete(id));
+      else idsFiltrados.forEach((id) => n.add(id));
+      return n;
+    });
+  }
+  function toggleUm(id: string) {
+    setSelectedIds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
 
   const rubFiltradas = useMemo(() => {
     const q = buscaRub.trim().toLowerCase();
@@ -440,8 +652,39 @@ function PagamentosPage() {
                         className="w-[220px] pl-8"
                       />
                     </div>
+                    <Button size="sm" onClick={() => setNovoOpen(true)}>
+                      <Plus className="mr-1 h-4 w-4" /> Novo pagamento
+                    </Button>
                   </div>
                 </div>
+
+                {/* barra de ações de seleção */}
+                {nSel > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+                    <span className="text-sm font-medium">{nSel} selecionado(s)</span>
+                    <div className="ml-auto flex flex-wrap items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={duplicarSel.isPending}
+                        onClick={() => duplicarSel.mutate(selPagamentos)}
+                      >
+                        <CopyPlus className="mr-1 h-4 w-4" /> Duplicar p/ próximo mês
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={excluirSel.isPending}
+                        onClick={() => setConfirmDelOpen(true)}
+                      >
+                        <Trash2 className="mr-1 h-4 w-4" /> Excluir selecionados
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                        Limpar
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 {pagFiltrados.length === 0 ? (
@@ -453,6 +696,13 @@ function PagamentosPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-8">
+                            <Checkbox
+                              aria-label="Selecionar todos"
+                              checked={todosSel ? true : algunsSel ? "indeterminate" : false}
+                              onCheckedChange={toggleTodos}
+                            />
+                          </TableHead>
                           <SortHead
                             sk="fornecedor"
                             sortKey={sortKey}
@@ -515,7 +765,17 @@ function PagamentosPage() {
                       <TableBody>
                         {pagFiltrados.map((p) => {
                           return (
-                            <TableRow key={p.id}>
+                            <TableRow
+                              key={p.id}
+                              data-state={selectedIds.has(p.id) ? "selected" : undefined}
+                            >
+                              <TableCell>
+                                <Checkbox
+                                  aria-label={`Selecionar ${p.fornecedor}`}
+                                  checked={selectedIds.has(p.id)}
+                                  onCheckedChange={() => toggleUm(p.id)}
+                                />
+                              </TableCell>
                               <TableCell className="font-medium">
                                 {p.fornecedor}
                                 {p.servico && (
@@ -634,6 +894,39 @@ function PagamentosPage() {
           </TabsContent>
         </Tabs>
       )}
+
+      <NovoPagamentoDialog
+        open={novoOpen}
+        onOpenChange={setNovoOpen}
+        rubricas={rubricas}
+        deptos={deptos}
+        hoje={hoje}
+        saving={insertPagamento.isPending}
+        onSubmit={(f) => insertPagamento.mutate(f)}
+      />
+
+      <AlertDialog open={confirmDelOpen} onOpenChange={setConfirmDelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir {nSel} pagamento(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação remove os lançamentos selecionados permanentemente. Não dá para desfazer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                excluirSel.mutate(Array.from(selectedIds));
+              }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -774,5 +1067,209 @@ function KpiCard({ titulo, valor, sub }: { titulo: string; valor: number; sub: s
         <div className="mt-1 text-xs text-muted-foreground">{sub}</div>
       </CardContent>
     </Card>
+  );
+}
+
+// ---------- combobox de rubrica (222 opções, com busca) ----------
+function RubricaCombobox({
+  rubricas,
+  value,
+  onChange,
+}: {
+  rubricas: Rubrica[];
+  value: string;
+  onChange: (codigo: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selecionada = rubricas.find((r) => r.codigo === value);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+          <span className="truncate">{selecionada ? selecionada.nome : "Escolha a rubrica…"}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[360px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Buscar rubrica ou código…" />
+          <CommandList>
+            <CommandEmpty>Nenhuma rubrica.</CommandEmpty>
+            <CommandGroup>
+              {rubricas.map((r) => (
+                <CommandItem
+                  key={r.codigo}
+                  value={`${r.nome} ${r.codigo} ${r.nivel1_nome}`}
+                  onSelect={() => {
+                    onChange(r.codigo);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={`mr-2 h-4 w-4 ${r.codigo === value ? "opacity-100" : "opacity-0"}`}
+                  />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm">{r.nome}</div>
+                    <div className="font-mono text-[10px] text-muted-foreground">
+                      {r.codigo} · {r.nivel1_nome}
+                    </div>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ---------- dialog de novo pagamento ----------
+function NovoPagamentoDialog({
+  open,
+  onOpenChange,
+  rubricas,
+  deptos,
+  hoje,
+  saving,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  rubricas: Rubrica[];
+  deptos: string[];
+  hoje: string;
+  saving: boolean;
+  onSubmit: (f: FormPag) => void;
+}) {
+  const [f, setF] = useState<FormPag>(() => formVazio(hoje));
+  useEffect(() => {
+    if (open) setF(formVazio(hoje));
+  }, [open, hoje]);
+
+  const set = <K extends keyof FormPag>(k: K, v: FormPag[K]) => setF((s) => ({ ...s, [k]: v }));
+  const cents = parseBRLToCents(f.valorStr);
+  const valido = f.fornecedor.trim() && cents != null && f.rubrica_codigo && f.data_vencimento;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Novo pagamento</DialogTitle>
+          <DialogDescription>A competência é definida pelo mês do vencimento.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3">
+          <div className="space-y-1.5">
+            <Label>Fornecedor *</Label>
+            <Input
+              value={f.fornecedor}
+              onChange={(e) => set("fornecedor", e.target.value)}
+              placeholder="Ex.: CELESC"
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Serviço</Label>
+              <Input
+                value={f.servico}
+                onChange={(e) => set("servico", e.target.value)}
+                placeholder="Ex.: Energia"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Departamento</Label>
+              <Input
+                value={f.departamento}
+                onChange={(e) => set("departamento", e.target.value)}
+                placeholder="Ex.: ADM"
+                list="deptos-list"
+              />
+              <datalist id="deptos-list">
+                {deptos.map((d) => (
+                  <option key={d} value={d} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Rubrica *</Label>
+            <RubricaCombobox
+              rubricas={rubricas}
+              value={f.rubrica_codigo}
+              onChange={(c) => set("rubrica_codigo", c)}
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>Valor *</Label>
+              <Input
+                value={f.valorStr}
+                onChange={(e) => set("valorStr", e.target.value)}
+                placeholder="R$ 0,00"
+                inputMode="decimal"
+                className={f.valorStr && cents == null ? "border-destructive" : ""}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Vencimento *</Label>
+              <Input
+                type="date"
+                value={f.data_vencimento}
+                onChange={(e) => set("data_vencimento", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tipo</Label>
+              <Select value={f.tipo} onValueChange={(v) => set("tipo", v as FormPag["tipo"])}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fixo">Fixo</SelectItem>
+                  <SelectItem value="variavel">Variável</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Status</Label>
+              <Select
+                value={f.status}
+                onValueChange={(v) => set("status", v as Pagamento["status"])}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPCOES.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Descrição</Label>
+            <Textarea
+              value={f.descricao}
+              onChange={(e) => set("descricao", e.target.value)}
+              placeholder="Observações (opcional)"
+              rows={2}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button disabled={!valido || saving} onClick={() => onSubmit(f)}>
+            Cadastrar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
