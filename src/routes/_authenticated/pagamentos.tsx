@@ -444,6 +444,13 @@ function PagamentosPage() {
     [pagamentos],
   );
 
+  // se o mês filtrado deixou de existir (ex.: excluiu o último do mês), volta p/ "Todos"
+  useEffect(() => {
+    if (mesRef !== "todos" && mesesRef.length > 0 && !mesesRef.includes(mesRef)) {
+      setMesRef("todos");
+    }
+  }, [mesRef, mesesRef]);
+
   // rubricas presentes nos pagamentos (para o filtro), ordenadas por nome
   const rubricasNosPagamentos = useMemo(() => {
     const codigos = Array.from(new Set(pagamentos.map((p) => p.rubrica_codigo).filter(Boolean)));
@@ -680,7 +687,7 @@ function PagamentosPage() {
                         <Trash2 className="mr-1 h-4 w-4" /> Excluir selecionados
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
-                        Limpar
+                        Limpar seleção
                       </Button>
                     </div>
                   </div>
