@@ -233,6 +233,15 @@ const TIPO_LABEL: Record<Pagamento["tipo"], string> = {
   imposto: "Imposto",
 };
 
+// centavos -> "185.000,00" (sem R$), para o campo de valor do formulário
+const nfValor = new Intl.NumberFormat("pt-BR", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+function valorBR(cents: number): string {
+  return nfValor.format(cents / 100);
+}
+
 function formVazio(hoje: string): FormPag {
   return {
     fornecedor: "",
@@ -254,7 +263,7 @@ function formDePagamento(p: Pagamento): FormPag {
     servico: p.servico ?? "",
     descricao: p.descricao ?? "",
     departamento: p.departamento ?? "",
-    valorStr: (p.valor_centavos / 100).toFixed(2).replace(".", ","),
+    valorStr: valorBR(p.valor_centavos),
     data_vencimento: p.data_vencimento,
     tipo: p.tipo,
     status: p.status,
@@ -1306,6 +1315,10 @@ function NovoPagamentoDialog({
               <Input
                 value={f.valorStr}
                 onChange={(e) => set("valorStr", e.target.value)}
+                onBlur={() => {
+                  const c = parseBRLToCents(f.valorStr);
+                  if (c != null) set("valorStr", valorBR(c));
+                }}
                 placeholder="R$ 0,00"
                 inputMode="decimal"
                 className={f.valorStr && cents == null ? "border-destructive" : ""}
