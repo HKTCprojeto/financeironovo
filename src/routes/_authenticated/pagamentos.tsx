@@ -68,7 +68,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatCents, parseBRLToCents } from "@/lib/financeiro";
+import { formatCents, formatReais, parseBRLToCents } from "@/lib/financeiro";
 
 export const Route = createFileRoute("/_authenticated/pagamentos")({
   head: () => ({ meta: [{ title: "Pagamentos — HKTC" }] }),
@@ -1171,8 +1171,9 @@ function KpiCard({ titulo, valor, sub }: { titulo: string; valor: number; sub: s
     <Card>
       <CardContent className="pt-5">
         <div className="text-sm text-muted-foreground">{titulo}</div>
-        <div className="mt-1 whitespace-nowrap font-mono text-xl font-bold">
-          {formatCents(valor)}
+        <div className="mt-1 flex items-baseline gap-1 whitespace-nowrap font-mono font-bold">
+          <span className="text-xs font-normal text-muted-foreground">R$</span>
+          <span className="text-xl">{formatReais(valor)}</span>
         </div>
         <div className="mt-1 text-xs text-muted-foreground">{sub}</div>
       </CardContent>

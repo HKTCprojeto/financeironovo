@@ -27,7 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { formatCents, mesAtual, mesLabel, shiftMes } from "@/lib/financeiro";
+import { formatCents, formatReais, mesAtual, mesLabel, shiftMes } from "@/lib/financeiro";
 import { formatCurrencyBRL } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -758,8 +758,11 @@ function Kpi({
     <Card>
       <CardContent className="pt-5">
         <div className="text-sm text-muted-foreground">{titulo}</div>
-        <div className={`mt-1 whitespace-nowrap font-mono text-xl font-bold ${toneCls}`}>
-          {formatCents(cents)}
+        <div
+          className={`mt-1 flex items-baseline gap-1 whitespace-nowrap font-mono font-bold ${toneCls}`}
+        >
+          <span className="text-xs font-normal text-muted-foreground">R$</span>
+          <span className="text-xl">{formatReais(cents)}</span>
         </div>
         {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
         {children}

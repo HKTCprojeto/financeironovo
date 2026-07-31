@@ -61,6 +61,14 @@ const fmtBRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BR
 export function formatCents(c: number | null | undefined): string {
   return fmtBRL.format((c || 0) / 100);
 }
+// só o número (sem "R$"), p/ exibir o R$ como referência menor separadamente
+const fmtNum = new Intl.NumberFormat("pt-BR", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+export function formatReais(c: number | null | undefined): string {
+  return fmtNum.format((c || 0) / 100);
+}
 
 // parse robusto de moeda BRL -> centavos inteiros (ou null). Rejeita milhar malformado,
 // >2 casas decimais e entradas sem dígitos. (Idêntico ao legado.)
@@ -129,7 +137,11 @@ export function gastoEscopo(
   }, 0);
 }
 
-export function limiteSeAplica(lim: Limite, categoriaId: string | null, natureza: Natureza): boolean {
+export function limiteSeAplica(
+  lim: Limite,
+  categoriaId: string | null,
+  natureza: Natureza,
+): boolean {
   if (lim.escopo === "categoria") return lim.alvo === categoriaId;
   if (lim.escopo === "totalFixas") return natureza === "fixa";
   if (lim.escopo === "totalVariaveis") return natureza === "variavel";
@@ -168,7 +180,13 @@ export interface ResultadoTravas {
 export function avaliarTravas(
   limites: Limite[],
   despesas: Despesa[],
-  ctx: { categoriaId: string | null; natureza: Natureza; ym: string; valorNovo: number; despesaId?: string | null },
+  ctx: {
+    categoriaId: string | null;
+    natureza: Natureza;
+    ym: string;
+    valorNovo: number;
+    despesaId?: string | null;
+  },
 ): ResultadoTravas {
   const bloqueios: InfoTrava[] = [];
   const avisos: InfoTrava[] = [];
@@ -189,7 +207,8 @@ export function avaliarTravas(
     if (lim.modo === "hard") {
       bloqueios.push(info);
     } else {
-      const limiarHard = lim.limiar_hard_pct != null ? lim.limite_centavos * (lim.limiar_hard_pct / 100) : null;
+      const limiarHard =
+        lim.limiar_hard_pct != null ? lim.limite_centavos * (lim.limiar_hard_pct / 100) : null;
       if (limiarHard != null && projetado > limiarHard) {
         info.escalado = true;
         info.limiteEfetivo = limiarHard;

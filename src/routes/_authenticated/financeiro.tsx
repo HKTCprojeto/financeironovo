@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCents, mesAtual, mesLabel, shiftMes } from "@/lib/financeiro";
+import { formatCents, formatReais, mesAtual, mesLabel, shiftMes } from "@/lib/financeiro";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — HKTC" }] }),
@@ -238,7 +238,7 @@ function FinanceiroPage() {
       ) : (
         <>
           {/* KPIs */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <Kpi titulo="Total do mês" cents={ag.total} sub={`${doMes.length} lançamentos`} />
             <Kpi titulo="Fixos" cents={ag.fixo} sub={pct(ag.fixo, ag.total)} />
             <Kpi titulo="Variáveis" cents={ag.variavel} sub={pct(ag.variavel, ag.total)} />
@@ -346,9 +346,10 @@ function Kpi({
       <CardContent className="pt-5">
         <div className="text-sm text-muted-foreground">{titulo}</div>
         <div
-          className={`mt-1 whitespace-nowrap font-mono text-xl font-bold ${tone === "amber" ? "text-amber-600" : ""}`}
+          className={`mt-1 flex items-baseline gap-1 whitespace-nowrap font-mono font-bold ${tone === "amber" ? "text-amber-600" : ""}`}
         >
-          {formatCents(cents)}
+          <span className="text-xs font-normal text-muted-foreground">R$</span>
+          <span className="text-lg">{formatReais(cents)}</span>
         </div>
         {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
       </CardContent>
