@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   ArrowRight,
   CalendarClock,
+  Clock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -246,7 +247,11 @@ function PainelPagamentos() {
       .sort((a, b) => b.ticket - a.ticket)
       .slice(0, 8);
 
-    const topContas = [...doMes].sort((a, b) => b.valor_centavos - a.valor_centavos).slice(0, 8);
+    // contas a vencer: pendentes ainda no prazo, mais próximas primeiro
+    const aVencer = doMes
+      .filter((p) => statusEfetivo(p, hoje) === "a_pagar")
+      .sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento))
+      .slice(0, 8);
     const vencidos = doMes
       .filter((p) => statusEfetivo(p, hoje) === "atrasado")
       .sort((a, b) => b.valor_centavos - a.valor_centavos);
@@ -265,7 +270,7 @@ function PainelPagamentos() {
       cronograma,
       topFornecedores,
       ticketRubrica,
-      topContas,
+      aVencer,
       vencidos,
       projecao: { vencido: projVencido, ate7: projAte7, ate30: projAte30, depois: projDepois },
       pctPago: total > 0 ? Math.round((pago / total) * 100) : 0,
@@ -583,11 +588,13 @@ function PainelPagamentos() {
             </ChartCard>
           </div>
 
-          {/* Maiores contas + Vencidos */}
+          {/* Contas a vencer + Vencidos */}
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader className="flex-row items-center justify-between">
-                <CardTitle className="text-base">Maiores contas do mês</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Clock className="h-4 w-4 text-amber-600" /> Contas a vencer
+                </CardTitle>
                 <Link
                   to="/pagamentos"
                   className="text-xs text-primary hover:underline inline-flex items-center gap-1"
@@ -596,25 +603,38 @@ function PainelPagamentos() {
                 </Link>
               </CardHeader>
               <CardContent className="divide-y divide-border">
-                {ag.topContas.map((p) => {
-                  const ef = statusEfetivo(p, hoje);
-                  return (
-                    <div key={p.id} className="flex items-center justify-between gap-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{p.fornecedor}</p>
-                        <p className="truncate text-xs text-muted-foreground">{p.servico ?? "—"}</p>
+                {ag.aVencer.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">
+                    Nada a vencer neste mês 🎉
+                  </p>
+                ) : (
+                  ag.aVencer.map((p) => {
+                    const dias = Math.round(
+                      (new Date(p.data_vencimento).getTime() - new Date(hoje).getTime()) / 86400000,
+                    );
+                    const quando =
+                      dias <= 0 ? "vence hoje" : dias === 1 ? "vence amanhã" : `vence em ${dias}d`;
+                    const ddmm = `${p.data_vencimento.slice(8, 10)}/${p.data_vencimento.slice(5, 7)}`;
+                    return (
+                      <div key={p.id} className="flex items-center justify-between gap-3 py-2.5">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{p.fornecedor}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {p.servico ?? "—"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono text-sm font-semibold tabular-nums">
+                            {formatCents(p.valor_centavos)}
+                          </p>
+                          <span className="text-[11px] text-muted-foreground">
+                            {quando} · {ddmm}
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-mono text-sm font-semibold tabular-nums">
-                          {formatCents(p.valor_centavos)}
-                        </p>
-                        <span className="text-[11px]" style={{ color: STATUS_META[ef].color }}>
-                          {STATUS_META[ef].label}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
 
