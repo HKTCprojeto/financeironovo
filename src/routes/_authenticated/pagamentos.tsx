@@ -247,6 +247,21 @@ function formVazio(hoje: string): FormPag {
   };
 }
 
+// pré-preenche o formulário a partir de um pagamento existente (edição)
+function formDePagamento(p: Pagamento): FormPag {
+  return {
+    fornecedor: p.fornecedor,
+    servico: p.servico ?? "",
+    descricao: p.descricao ?? "",
+    departamento: p.departamento ?? "",
+    valorStr: (p.valor_centavos / 100).toFixed(2).replace(".", ","),
+    data_vencimento: p.data_vencimento,
+    tipo: p.tipo,
+    status: p.status,
+    rubrica_codigo: p.rubrica_codigo,
+  };
+}
+
 function PagamentosPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["plano-gerencial"],
@@ -292,6 +307,7 @@ function PagamentosPage() {
   // ---- seleção em massa + escrita (novo / duplicar / excluir) ----
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [novoOpen, setNovoOpen] = useState(false);
+  const [editando, setEditando] = useState<Pagamento | null>(null);
   const [confirmDelOpen, setConfirmDelOpen] = useState(false);
 
   const invalidar = () => queryClient.invalidateQueries({ queryKey: ["plano-gerencial"] });
@@ -339,6 +355,51 @@ function PagamentosPage() {
     },
     onError: (e) =>
       toast.error("Não foi possível cadastrar", { description: (e as Error).message }),
+  });
+
+  const updatePagamento = useMutation({
+    mutationFn: async ({ orig, f }: { orig: Pagamento; f: FormPag }) => {
+      const cents = parseBRLToCents(f.valorStr);
+      if (cents == null) throw new Error("Valor inválido");
+      if (!f.fornecedor.trim()) throw new Error("Informe o fornecedor");
+      if (!f.rubrica_codigo) throw new Error("Escolha a rubrica");
+      if (!f.data_vencimento) throw new Error("Informe o vencimento");
+      const mes_ref = f.data_vencimento.slice(0, 7);
+      const dia = Number(f.data_vencimento.slice(8, 10));
+      const data_pagamento = f.status === "pago" ? (orig.data_pagamento ?? hoje) : null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+      const { data: rows, error: err } = await sb
+        .from("fin_pagamentos")
+        .update({
+          departamento: f.departamento.trim() || null,
+          fornecedor: f.fornecedor.trim(),
+          servico: f.servico.trim() || null,
+          descricao: f.descricao.trim() || null,
+          valor_centavos: cents,
+          data_vencimento: f.data_vencimento,
+          data_pagamento,
+          dia_vencimento: dia,
+          tipo: f.tipo,
+          status: f.status,
+          rubrica_codigo: f.rubrica_codigo,
+          mes_ref,
+        })
+        .eq("id", orig.id)
+        .select("id");
+      if (err) throw err;
+      if (!rows || rows.length === 0)
+        throw new Error(
+          "Nada alterado — verifique se a policy de UPDATE foi aplicada no Supabase.",
+        );
+    },
+    onSuccess: () => {
+      invalidar();
+      toast.success("Pagamento atualizado");
+      setNovoOpen(false);
+      setEditando(null);
+    },
+    onError: (e) => toast.error("Não foi possível salvar", { description: (e as Error).message }),
   });
 
   const duplicarSel = useMutation({
@@ -673,7 +734,13 @@ function PagamentosPage() {
                         className="w-[220px] pl-8"
                       />
                     </div>
-                    <Button size="sm" onClick={() => setNovoOpen(true)}>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setEditando(null);
+                        setNovoOpen(true);
+                      }}
+                    >
                       <Plus className="mr-1 h-4 w-4" /> Novo pagamento
                     </Button>
                   </div>
@@ -789,8 +856,13 @@ function PagamentosPage() {
                             <TableRow
                               key={p.id}
                               data-state={selectedIds.has(p.id) ? "selected" : undefined}
+                              className="cursor-pointer"
+                              onClick={() => {
+                                setEditando(p);
+                                setNovoOpen(true);
+                              }}
                             >
-                              <TableCell>
+                              <TableCell onClick={(e) => e.stopPropagation()}>
                                 <Checkbox
                                   aria-label={`Selecionar ${p.fornecedor}`}
                                   checked={selectedIds.has(p.id)}
@@ -830,7 +902,7 @@ function PagamentosPage() {
                               <TableCell className="whitespace-nowrap">
                                 {fmtDate(p.data_vencimento)}
                               </TableCell>
-                              <TableCell>
+                              <TableCell onClick={(e) => e.stopPropagation()}>
                                 <StatusCell
                                   pagamento={p}
                                   efetivo={statusEfetivo(p, hoje)}
@@ -918,12 +990,18 @@ function PagamentosPage() {
 
       <NovoPagamentoDialog
         open={novoOpen}
-        onOpenChange={setNovoOpen}
+        onOpenChange={(o) => {
+          setNovoOpen(o);
+          if (!o) setEditando(null);
+        }}
+        editando={editando}
         rubricas={rubricas}
         deptos={deptos}
         hoje={hoje}
-        saving={insertPagamento.isPending}
-        onSubmit={(f) => insertPagamento.mutate(f)}
+        saving={insertPagamento.isPending || updatePagamento.isPending}
+        onSubmit={(f) =>
+          editando ? updatePagamento.mutate({ orig: editando, f }) : insertPagamento.mutate(f)
+        }
       />
 
       <AlertDialog open={confirmDelOpen} onOpenChange={setConfirmDelOpen}>
@@ -1145,10 +1223,11 @@ function RubricaCombobox({
   );
 }
 
-// ---------- dialog de novo pagamento ----------
+// ---------- dialog de novo / editar pagamento ----------
 function NovoPagamentoDialog({
   open,
   onOpenChange,
+  editando,
   rubricas,
   deptos,
   hoje,
@@ -1157,6 +1236,7 @@ function NovoPagamentoDialog({
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  editando: Pagamento | null;
   rubricas: Rubrica[];
   deptos: string[];
   hoje: string;
@@ -1165,8 +1245,8 @@ function NovoPagamentoDialog({
 }) {
   const [f, setF] = useState<FormPag>(() => formVazio(hoje));
   useEffect(() => {
-    if (open) setF(formVazio(hoje));
-  }, [open, hoje]);
+    if (open) setF(editando ? formDePagamento(editando) : formVazio(hoje));
+  }, [open, hoje, editando]);
 
   const set = <K extends keyof FormPag>(k: K, v: FormPag[K]) => setF((s) => ({ ...s, [k]: v }));
   const cents = parseBRLToCents(f.valorStr);
@@ -1176,7 +1256,7 @@ function NovoPagamentoDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Novo pagamento</DialogTitle>
+          <DialogTitle>{editando ? "Editar pagamento" : "Novo pagamento"}</DialogTitle>
           <DialogDescription>A competência é definida pelo mês do vencimento.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
@@ -1288,7 +1368,7 @@ function NovoPagamentoDialog({
             Cancelar
           </Button>
           <Button disabled={!valido || saving} onClick={() => onSubmit(f)}>
-            Cadastrar
+            {editando ? "Salvar" : "Cadastrar"}
           </Button>
         </DialogFooter>
       </DialogContent>
