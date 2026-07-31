@@ -98,7 +98,7 @@ type Pagamento = {
   data_vencimento: string;
   data_pagamento: string | null;
   dia_vencimento: number | null;
-  tipo: "fixo" | "variavel";
+  tipo: "fixo" | "variavel" | "imposto";
   periodicidade: string | null;
   status: "previsto" | "a_pagar" | "pago" | "atrasado";
   rubrica_codigo: string;
@@ -222,9 +222,15 @@ type FormPag = {
   departamento: string;
   valorStr: string;
   data_vencimento: string;
-  tipo: "fixo" | "variavel";
+  tipo: "fixo" | "variavel" | "imposto";
   status: Pagamento["status"];
   rubrica_codigo: string;
+};
+
+const TIPO_LABEL: Record<Pagamento["tipo"], string> = {
+  fixo: "Fixo",
+  variavel: "Variável",
+  imposto: "Imposto",
 };
 
 function formVazio(hoje: string): FormPag {
@@ -547,6 +553,9 @@ function PagamentosPage() {
   const totalVar = pagFiltrados
     .filter((p) => p.tipo === "variavel")
     .reduce((s, p) => s + p.valor_centavos, 0);
+  const totalImposto = pagFiltrados
+    .filter((p) => p.tipo === "imposto")
+    .reduce((s, p) => s + p.valor_centavos, 0);
 
   if (error) {
     return (
@@ -587,7 +596,7 @@ function PagamentosPage() {
 
           {/* ---------------- PAGAMENTOS ---------------- */}
           <TabsContent value="pagamentos" className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <KpiCard
                 titulo="Total a pagar"
                 valor={totalCents}
@@ -602,6 +611,11 @@ function PagamentosPage() {
                 titulo="Variáveis"
                 valor={totalVar}
                 sub={`${pagFiltrados.filter((p) => p.tipo === "variavel").length} lançamentos`}
+              />
+              <KpiCard
+                titulo="Impostos"
+                valor={totalImposto}
+                sub={`${pagFiltrados.filter((p) => p.tipo === "imposto").length} lançamentos`}
               />
             </div>
 
@@ -810,7 +824,7 @@ function PagamentosPage() {
                               </TableCell>
                               <TableCell>
                                 <Badge variant="secondary" className="text-[10px]">
-                                  {p.tipo === "fixo" ? "Fixo" : "Variável"}
+                                  {TIPO_LABEL[p.tipo]}
                                 </Badge>
                               </TableCell>
                               <TableCell className="whitespace-nowrap">
@@ -1234,6 +1248,7 @@ function NovoPagamentoDialog({
                 <SelectContent>
                   <SelectItem value="fixo">Fixo</SelectItem>
                   <SelectItem value="variavel">Variável</SelectItem>
+                  <SelectItem value="imposto">Imposto</SelectItem>
                 </SelectContent>
               </Select>
             </div>

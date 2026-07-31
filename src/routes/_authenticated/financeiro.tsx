@@ -45,7 +45,7 @@ type Pagamento = {
   fornecedor: string;
   valor_centavos: number;
   data_vencimento: string;
-  tipo: "fixo" | "variavel";
+  tipo: "fixo" | "variavel" | "imposto";
   status: "previsto" | "a_pagar" | "pago" | "atrasado";
   rubrica_codigo: string;
   mes_ref: string;
@@ -112,6 +112,7 @@ function FinanceiroPage() {
     let total = 0,
       fixo = 0,
       variavel = 0,
+      imposto = 0,
       pago = 0,
       pendente = 0;
     const grupo = new Map<string, Linha>();
@@ -127,7 +128,8 @@ function FinanceiroPage() {
 
     for (const p of doMes) {
       total += p.valor_centavos;
-      if (p.tipo === "fixo") fixo += p.valor_centavos;
+      if (p.tipo === "imposto") imposto += p.valor_centavos;
+      else if (p.tipo === "fixo") fixo += p.valor_centavos;
       else variavel += p.valor_centavos;
       const ef = statusEfetivo(p, hoje);
       if (ef === "pago") pago += p.valor_centavos;
@@ -149,6 +151,7 @@ function FinanceiroPage() {
       total,
       fixo,
       variavel,
+      imposto,
       pago,
       pendente,
       porGrupo: arr(grupo),
@@ -235,10 +238,11 @@ function FinanceiroPage() {
       ) : (
         <>
           {/* KPIs */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <Kpi titulo="Total do mês" cents={ag.total} sub={`${doMes.length} lançamentos`} />
             <Kpi titulo="Fixos" cents={ag.fixo} sub={pct(ag.fixo, ag.total)} />
             <Kpi titulo="Variáveis" cents={ag.variavel} sub={pct(ag.variavel, ag.total)} />
+            <Kpi titulo="Impostos" cents={ag.imposto} sub={pct(ag.imposto, ag.total)} />
             <Kpi
               titulo="Pendente"
               cents={ag.pendente}

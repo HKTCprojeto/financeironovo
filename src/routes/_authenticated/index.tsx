@@ -50,7 +50,7 @@ type Pagamento = {
   valor_centavos: number;
   data_vencimento: string;
   data_pagamento: string | null;
-  tipo: "fixo" | "variavel";
+  tipo: "fixo" | "variavel" | "imposto";
   status: "previsto" | "a_pagar" | "pago" | "atrasado";
   rubrica_codigo: string;
   mes_ref: string;
@@ -173,7 +173,8 @@ function PainelPagamentos() {
       aPagar = 0,
       vencido = 0,
       fixo = 0,
-      variavel = 0;
+      variavel = 0,
+      imposto = 0;
     const porGrupo = new Map<string, number>();
     const porDepto = new Map<string, number>();
     const porDia = new Map<number, number>(); // vencimentos pendentes por dia
@@ -191,7 +192,8 @@ function PainelPagamentos() {
       else if (ef === "atrasado") vencido += p.valor_centavos;
       else aPagar += p.valor_centavos;
 
-      if (p.tipo === "fixo") fixo += p.valor_centavos;
+      if (p.tipo === "imposto") imposto += p.valor_centavos;
+      else if (p.tipo === "fixo") fixo += p.valor_centavos;
       else variavel += p.valor_centavos;
 
       const g = grupoDaRubrica.get(p.rubrica_codigo) ?? "Sem grupo";
@@ -257,6 +259,7 @@ function PainelPagamentos() {
       pendente: aPagar + vencido,
       fixo,
       variavel,
+      imposto,
       porGrupo: toArr(porGrupo).slice(0, 8),
       porDepto: toArr(porDepto),
       cronograma,
@@ -278,6 +281,7 @@ function PainelPagamentos() {
   const tipoData = [
     { nome: "Fixos", valor: ag.fixo / 100 },
     { nome: "Variáveis", valor: ag.variavel / 100 },
+    { nome: "Impostos", valor: ag.imposto / 100 },
   ].filter((d) => d.valor > 0);
 
   if (error) {
@@ -425,7 +429,7 @@ function PainelPagamentos() {
               )}
             </ChartCard>
 
-            <ChartCard titulo="Fixos x Variáveis">
+            <ChartCard titulo="Fixos · Variáveis · Impostos">
               {tipoData.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
