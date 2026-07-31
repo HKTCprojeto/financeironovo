@@ -238,7 +238,7 @@ function FinanceiroPage() {
       ) : (
         <>
           {/* KPIs */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Kpi titulo="Total do mês" cents={ag.total} sub={`${doMes.length} lançamentos`} />
             <Kpi titulo="Fixos" cents={ag.fixo} sub={pct(ag.fixo, ag.total)} />
             <Kpi titulo="Variáveis" cents={ag.variavel} sub={pct(ag.variavel, ag.total)} />
@@ -346,7 +346,7 @@ function Kpi({
       <CardContent className="pt-5">
         <div className="text-sm text-muted-foreground">{titulo}</div>
         <div
-          className={`mt-1 font-mono text-2xl font-bold ${tone === "amber" ? "text-amber-600" : ""}`}
+          className={`mt-1 whitespace-nowrap font-mono text-xl font-bold ${tone === "amber" ? "text-amber-600" : ""}`}
         >
           {formatCents(cents)}
         </div>

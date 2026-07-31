@@ -1171,7 +1171,9 @@ function KpiCard({ titulo, valor, sub }: { titulo: string; valor: number; sub: s
     <Card>
       <CardContent className="pt-5">
         <div className="text-sm text-muted-foreground">{titulo}</div>
-        <div className="mt-1 font-mono text-2xl font-bold">{formatCents(valor)}</div>
+        <div className="mt-1 whitespace-nowrap font-mono text-xl font-bold">
+          {formatCents(valor)}
+        </div>
         <div className="mt-1 text-xs text-muted-foreground">{sub}</div>
       </CardContent>
     </Card>
