@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { mensagemErroEdge } from "@/lib/edge-error";
 import {
   Dialog,
   DialogContent,
@@ -55,20 +56,7 @@ type AdminUser = {
 // automaticamente; a função valida se quem chama é o admin.
 async function callAdmin<T = unknown>(body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke("admin-invite", { body });
-  if (error) {
-    let msg = error.message;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ctx = (error as any).context;
-    if (ctx && typeof ctx.json === "function") {
-      try {
-        const j = await ctx.json();
-        if (j?.error) msg = j.error;
-      } catch {
-        /* mantém msg genérica */
-      }
-    }
-    throw new Error(msg);
-  }
+  if (error) throw new Error(await mensagemErroEdge(error));
   return data as T;
 }
 

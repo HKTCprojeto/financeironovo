@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CFO_QUICK_ACTIONS } from "@/lib/cfo-quick-actions";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 export const Route = createFileRoute("/_authenticated/chat")({
   head: () => ({ meta: [{ title: "Conversar com Lívia — Agente CFO" }] }),
@@ -165,7 +166,9 @@ function ChatPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (error) {
-          toast.error(`Falha: ${error.message ?? String(error)}`);
+          // A função devolve o motivo real no corpo (ex.: "Lívia está offline
+          // — sua VPS não está conectada"). Sem isto vira "non-2xx status code".
+          toast.error(await mensagemErroEdge(error));
         }
       } finally {
         setSending(false);
