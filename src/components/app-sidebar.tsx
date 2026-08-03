@@ -39,6 +39,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const mainItems = [
@@ -78,7 +79,11 @@ export function AppSidebar() {
     setLoadingMC(true);
     try {
       const { data, error } = await supabase.functions.invoke("openclaw-dashboard-url");
-      if (!error && data?.url) window.open(data.url, "_blank");
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+      else toast.error("URL do OpenClaw indisponível");
+    } catch (err) {
+      toast.error(`Falha ao abrir Mission Control: ${String((err as Error).message ?? err)}`);
     } finally {
       setLoadingMC(false);
     }
