@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmptyState } from "@/components/states";
 import { formatCurrencyBRL, formatDateTime, formatRelative } from "@/lib/format";
 import { SeverityBadge } from "@/lib/status";
+import { mensagemErroEdge } from "@/lib/edge-error";
 import { toast } from "sonner";
 import { RefreshCw, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
 import {
@@ -158,7 +159,7 @@ function CashCard({ instanceId }: { instanceId: string | null }) {
       const { data: resp, error } = await supabase.functions.invoke("reports-cash-projection", {
         body: { instance_id: instanceId },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       const payload = (resp?.data ?? {}) as CashProjection;
       setData(payload);
       writeCache(cacheKey, payload);
@@ -277,7 +278,7 @@ function PipelineCard({ instanceId }: { instanceId: string | null }) {
       const { data: resp, error } = await supabase.functions.invoke("reports-pipeline-projection", {
         body: { instance_id: instanceId },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       const payload = (resp?.data ?? {}) as PipelineProjection;
       setData(payload);
       writeCache(cacheKey, payload);

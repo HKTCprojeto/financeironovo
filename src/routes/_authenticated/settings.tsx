@@ -7,6 +7,7 @@ import { LogOut, Terminal, Server, HelpCircle, ChevronRight, Cpu } from "lucide-
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { formatRelative } from "@/lib/format";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configurações — Agente CFO" }] }),
@@ -49,7 +50,7 @@ function SettingsPage() {
     setOpeningOC(true);
     try {
       const { data, error } = await supabase.functions.invoke("openclaw-dashboard-url");
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       if (data?.url) window.open(data.url, "_blank");
       else toast.error("URL do OpenClaw indisponível");
     } catch (err) {

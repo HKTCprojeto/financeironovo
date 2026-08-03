@@ -39,6 +39,7 @@ import {
 } from "@/lib/integrations-spec";
 import type { IntegrationCredentialMeta } from "@/types/integration-credentials";
 import { CredentialsDialog } from "@/components/integrations/CredentialsDialog";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 export const Route = createFileRoute("/_authenticated/integrations/")({
   head: () => ({ meta: [{ title: "Integrações — Agente CFO" }] }),
@@ -183,7 +184,7 @@ function IntegrationsIndex() {
     });
     setUpdating(false);
     if (error) {
-      toast.error("Falha ao atualizar VPS", { description: error.message });
+      toast.error("Falha ao atualizar VPS", { description: await mensagemErroEdge(error) });
       return;
     }
     toast.success("Comando enviado", {

@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { mensagemErroEdge } from "@/lib/edge-error";
 import {
   ArrowLeft, ArrowRight, Briefcase, CheckCircle2, Copy, ExternalLink,
   Loader2, MessageSquare, Phone, Sparkles, KeyRound, Plug, Server,
@@ -335,7 +336,7 @@ function Step4Erp({ data, updateData, onNext, onBack }: any) {
       const { data: r, error } = await supabase.functions.invoke("onboarding-test-erp-connection", {
         body: { erp_name: selected, credentials: creds },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       if (!r?.valid) { toast.error(r?.error ?? "Credenciais inválidas"); return; }
       updateData({ erp: { name: selected, credentials: creds, validated: true } });
       toast.success("ERP configurado");
@@ -443,7 +444,7 @@ function Step5Crm({ data, updateData, onNext, onBack }: any) {
       const { data: r, error } = await supabase.functions.invoke("onboarding-test-crm-connection", {
         body: { crm_name: selected, credentials: creds },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       if (!r?.valid) { toast.error(r?.error ?? "Credenciais inválidas"); return; }
       updateData({ crm: { name: selected, credentials: creds, validated: true } });
       onNext();
@@ -519,7 +520,7 @@ function Step6Vps({ data, updateData, onNext, onBack }: any) {
     setIssuing(true);
     try {
       const { data: r, error } = await supabase.functions.invoke("onboarding-issue-token", {});
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       setInstallerUrl(r.installer_url);
       updateData({ installer_token: r.token, installer_url: r.installer_url });
     } catch (e: any) {
@@ -637,7 +638,7 @@ function Step7WhatsAppPair({ data, updateData, onNext, onBack }: any) {
           command: `/skill wa auth --phone ${data.whatsapp_phone}`,
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       toast.success("Pareamento iniciado. Verifique o WhatsApp em ~30s.");
     } catch (e: any) {
       toast.error(e?.message ?? "Falha ao iniciar pareamento");

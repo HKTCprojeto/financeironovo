@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Eye, EyeOff, AlertTriangle, Pencil, Trash2, Loader2 } from "lucide-react";
 import type { SupabaseProject } from "@/types/supabase-projects";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 export const Route = createFileRoute("/_authenticated/integrations/supabase")({
   head: () => ({ meta: [{ title: "Conexões Supabase — Agente CFO" }] }),
@@ -96,7 +97,7 @@ function SupabaseIntegrationsPage() {
       method: "GET",
     });
     if (error) {
-      toast.error("Erro ao carregar projetos", { description: error.message });
+      toast.error("Erro ao carregar projetos", { description: await mensagemErroEdge(error) });
       setProjects([]);
       return;
     }
@@ -157,7 +158,7 @@ function SupabaseIntegrationsPage() {
     setSaving(false);
 
     if (error) {
-      toast.error("Erro ao salvar", { description: error.message });
+      toast.error("Erro ao salvar", { description: await mensagemErroEdge(error) });
       return;
     }
     toast.success(form.id ? "Projeto atualizado" : "Projeto criado");
@@ -180,7 +181,7 @@ function SupabaseIntegrationsPage() {
     setTestingId(null);
 
     if (error) {
-      toast.error("Erro ao testar", { description: error.message });
+      toast.error("Erro ao testar", { description: await mensagemErroEdge(error) });
       await fetchProjects();
       return;
     }
@@ -205,7 +206,7 @@ function SupabaseIntegrationsPage() {
     } as never);
     // Fallback: chama via fetch direto pra incluir ?id=
     if (error) {
-      toast.error("Erro ao deletar", { description: error.message });
+      toast.error("Erro ao deletar", { description: await mensagemErroEdge(error) });
     }
     // Sempre chama via URL parameter usando functions.invoke alternativa
     setConfirmDelete(null);

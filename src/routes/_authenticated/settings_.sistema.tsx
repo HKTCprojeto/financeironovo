@@ -11,6 +11,7 @@ import {
   RotateCw, Activity, Package, FileText, Loader2, Terminal, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 export const Route = createFileRoute("/_authenticated/settings_/sistema")({
   head: () => ({ meta: [{ title: "Sistema (avançado) — Agente CFO" }] }),
@@ -111,7 +112,7 @@ function SistemaPage() {
         body: { action, params },
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       const runId = (data as { run_id?: string })?.run_id;
       if (!runId) throw new Error("Sem run_id na resposta");
       pendingRunIds.current.set(runId, target);

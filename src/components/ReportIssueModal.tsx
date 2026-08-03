@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 interface Props {
   open: boolean;
@@ -48,7 +49,7 @@ export function ReportIssueModal({ open, onClose }: Props) {
           include_telemetry: includeTelemetry,
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       toast.success("Issue criado com sucesso!");
       if (data?.issue_url) {
         window.open(data.issue_url, "_blank", "noopener,noreferrer");

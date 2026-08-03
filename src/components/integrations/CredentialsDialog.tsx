@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Eye, EyeOff, ExternalLink, Loader2 } from "lucide-react";
 import type { IntegrationSpec } from "@/lib/integrations-spec";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 type Props = {
   open: boolean;
@@ -66,7 +67,7 @@ export function CredentialsDialog({ open, onOpenChange, spec, isExisting, onSave
     });
     setSaving(false);
     if (error) {
-      toast.error("Erro ao salvar", { description: error.message });
+      toast.error("Erro ao salvar", { description: await mensagemErroEdge(error) });
       return false;
     }
     toast.success("Credenciais salvas");
@@ -88,7 +89,7 @@ export function CredentialsDialog({ open, onOpenChange, spec, isExisting, onSave
     });
     setTesting(false);
     if (error) {
-      toast.error("Erro no teste", { description: error.message });
+      toast.error("Erro no teste", { description: await mensagemErroEdge(error) });
       return;
     }
     const r = data as { status: string; detail?: string };

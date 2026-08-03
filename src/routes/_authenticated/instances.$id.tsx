@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { InstanceStatusBadge, SeverityBadge, WhatsAppStatusBadge } from "@/lib/status";
 import { formatCurrencyBRL, formatDateTime, formatRelative } from "@/lib/format";
 import { PageSkeleton, EmptyState } from "@/components/states";
+import { mensagemErroEdge } from "@/lib/edge-error";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, CartesianGrid } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/instances/$id")({
@@ -256,7 +257,7 @@ function PushCommandDialog({ instance }: { instance: Instance }) {
       const { data, error } = await supabase.functions.invoke("push-command", {
         body: { instance_id: instance.id, command },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       toast.success("Comando enviado", {
         description: typeof data === "object" && data ? "Resposta recebida da instância." : undefined,
       });

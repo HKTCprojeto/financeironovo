@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatRelative } from "@/lib/format";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 export const Route = createFileRoute("/_authenticated/settings_/whatsapp")({
   head: () => ({ meta: [{ title: "WhatsApp — Agente CFO" }] }),
@@ -151,7 +152,7 @@ function WhatsAppPage() {
       const { error } = await supabase.functions.invoke("evolution-config-save", {
         body, headers: { Authorization: `Bearer ${token}` },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       toast.success("Configuração salva");
       setApiKey("");
       await loadCfg();
@@ -195,7 +196,7 @@ function WhatsAppPage() {
         body: { instance_name: name },
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       const qr = (data as { qr_base64?: string })?.qr_base64 ?? null;
       setActiveQr(qr);
       setActiveInstance(name);

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 export const Route = createFileRoute("/_authenticated/integrations/bling/callback")({
   head: () => ({ meta: [{ title: "Conectando Bling…" }] }),
@@ -61,7 +62,7 @@ function BlingCallback() {
           },
         });
         if (exchErr || !exch?.access_token) {
-          throw new Error(exchErr?.message || exch?.error || "Falha na troca de tokens");
+          throw new Error(exchErr ? await mensagemErroEdge(exchErr) : exch?.error || "Falha na troca de tokens");
         }
 
         setMessage("Enviando tokens para a sua VPS…");

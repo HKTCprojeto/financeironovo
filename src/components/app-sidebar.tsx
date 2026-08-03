@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 const mainItems = [
   { title: "Painel", url: "/", icon: LayoutDashboard, exact: true },
@@ -56,7 +57,9 @@ const mainItems = [
 
 const channelItems = [
   { title: "WhatsApp", url: "/settings/whatsapp", icon: MessageCircle },
-  { title: "Telegram", url: "/settings/telegram", icon: Send },
+  // A rota /settings/telegram ainda não existe — o item levava a um 404.
+  // Fica visível (é roadmap) mas desabilitado até a tela ser construída.
+  { title: "Telegram", url: "/settings/telegram", icon: Send, emBreve: true },
 ];
 
 const adminItems = [
@@ -79,7 +82,7 @@ export function AppSidebar() {
     setLoadingMC(true);
     try {
       const { data, error } = await supabase.functions.invoke("openclaw-dashboard-url");
-      if (error) throw error;
+      if (error) throw new Error(await mensagemErroEdge(error));
       if (data?.url) window.open(data.url, "_blank");
       else toast.error("URL do OpenClaw indisponível");
     } catch (err) {
@@ -141,12 +144,22 @@ export function AppSidebar() {
             <SidebarMenu>
               {channelItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <Link to={item.url}>
+                  {item.emBreve ? (
+                    <SidebarMenuButton disabled tooltip={`${item.title} — em breve`}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
+                      <span className="ml-auto text-[10px] text-muted-foreground group-data-[collapsible=icon]:hidden">
+                        em breve
+                      </span>
+                    </SidebarMenuButton>
+                  ) : (
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                      <Link to={item.url}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

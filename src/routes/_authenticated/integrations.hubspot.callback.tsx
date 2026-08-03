@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 export const Route = createFileRoute("/_authenticated/integrations/hubspot/callback")({
   head: () => ({ meta: [{ title: "Conectando HubSpot…" }] }),
@@ -62,7 +63,7 @@ function HubspotCallback() {
           },
         });
         if (error || !data?.ok) {
-          throw new Error(error?.message || data?.error || "Falha na troca de tokens");
+          throw new Error(error ? await mensagemErroEdge(error) : data?.error || "Falha na troca de tokens");
         }
 
         sessionStorage.removeItem(STORAGE_KEY);

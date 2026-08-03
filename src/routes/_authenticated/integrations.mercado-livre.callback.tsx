@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { mensagemErroEdge } from "@/lib/edge-error";
 
 export const Route = createFileRoute("/_authenticated/integrations/mercado-livre/callback")({
   head: () => ({ meta: [{ title: "Conectando Mercado Livre…" }] }),
@@ -47,7 +48,7 @@ function MercadoLivreCallback() {
         const { data: exch, error: exchErr } = await supabase.functions.invoke("mercado-livre-oauth-exchange", {
           body: { code, client_id: pending.client_id, client_secret: pending.client_secret, redirect_uri: pending.redirect_uri },
         });
-        if (exchErr || !exch?.access_token) throw new Error(exchErr?.message || exch?.error || "Falha na troca de tokens");
+        if (exchErr || !exch?.access_token) throw new Error(exchErr ? await mensagemErroEdge(exchErr) : exch?.error || "Falha na troca de tokens");
 
         setMessage("Enviando tokens para a sua VPS…");
         const { error: pushErr } = await supabase.functions.invoke("mercado-livre-push-tokens", {
