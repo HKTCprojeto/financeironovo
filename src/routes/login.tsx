@@ -110,9 +110,21 @@ function LoginPage() {
         />
         <div className="absolute inset-0 bg-slate-900/45" />
       </div>
+      {/* Badge do avatar, canto inferior direito (como no login antigo) */}
+      <img
+        src="/avatar.webp"
+        alt=""
+        aria-hidden="true"
+        className="absolute bottom-4 right-4 z-10 h-14 w-14 rounded-full border-2 border-white/80 object-cover shadow-lg sm:bottom-[26px] sm:right-[26px] sm:h-[72px] sm:w-[72px]"
+      />
       <Toaster />
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
+          <img
+            src="/logo-hktc.webp"
+            alt="HKTC Do Brasil S/A"
+            className="mx-auto mb-4 h-[98px] w-[210px] object-contain"
+          />
           <CardTitle className="text-2xl font-semibold tracking-tight">Agente CFO</CardTitle>
           <CardDescription>Painel administrativo</CardDescription>
         </CardHeader>

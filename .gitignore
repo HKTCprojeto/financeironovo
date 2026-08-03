@@ -40,3 +40,6 @@ dist-ssr
 
 # Supabase CLI local link state
 supabase/.temp/
+
+# Claude Code (config local, nao versionar)
+.claude/settings.local.json
