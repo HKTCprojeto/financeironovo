@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,7 +14,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Search } from "lucide-react";
+import { Trash2, Search, Undo2 } from "lucide-react";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { formatRelative } from "@/lib/format";
 import { formatCents } from "@/lib/financeiro";
@@ -53,6 +56,32 @@ function grupoDaAcao(action: string): string {
   return ["pagamento", "rubrica", "usuario"].includes(p) ? p : "sistema";
 }
 
+// Campos que nunca entram num desfazer: identidade e carimbo de escrita.
+const CAMPOS_NAO_RESTAURAVEIS = new Set(["id", "created_at", "updated_at"]);
+
+/**
+ * Qual lançamento este registro afeta. Usado para achar a alteração mais nova
+ * do mesmo pagamento — só a última pode ser desfeita.
+ */
+function alvoDoRegistro(r: Row): string | null {
+  const p = r.payload as Record<string, unknown> | null;
+  if (!p || typeof p !== "object") return null;
+  if (typeof p.id === "string") return p.id;
+  const reg = p.registro as Record<string, unknown> | undefined;
+  return typeof reg?.id === "string" ? reg.id : null;
+}
+
+/**
+ * Só pagamentos são reversíveis.
+ *
+ * - rubricas: a RLS só deixa service_role escrever, o desfazer falharia calado;
+ * - usuários: conta apagada no Auth não volta, senha não fica guardada;
+ * - VPS/tokens: não são operações de dado.
+ */
+function acaoReversivel(action: string): boolean {
+  return ["pagamento_criado", "pagamento_alterado", "pagamento_excluido"].includes(action);
+}
+
 /** Resumo de uma linha em texto — alimenta a coluna e a busca. */
 function resumo(r: Row): string {
   const p = r.payload as Record<string, unknown> | null;
@@ -85,32 +114,108 @@ function AuditPage() {
   const [loading, setLoading] = useState(true);
   const [souAdmin, setSouAdmin] = useState(false);
   const [excluindo, setExcluindo] = useState<number | null>(null);
+  const [desfazendo, setDesfazendo] = useState<number | null>(null);
 
   const [busca, setBusca] = useState("");
   const [tipo, setTipo] = useState("todos");
   const [periodo, setPeriodo] = useState("30");
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("audit_log")
-        .select("id, action, actor_user_id, payload, created_at")
-        .order("created_at", { ascending: false })
-        .limit(500);
-      const list = (data as Row[] | null) ?? [];
-      setRows(list);
+  const carregar = useCallback(async () => {
+    const { data } = await supabase
+      .from("audit_log")
+      .select("id, action, actor_user_id, payload, created_at")
+      .order("id", { ascending: false })
+      .limit(500);
+    const list = (data as Row[] | null) ?? [];
+    setRows(list);
 
-      const ids = new Set(list.map((r) => r.actor_user_id).filter(Boolean) as string[]);
-      const map: Record<string, string> = {};
-      const { data: me } = await supabase.auth.getUser();
-      if (me.user) {
-        setSouAdmin(ehAdmin(me.user.email));
-        if (ids.has(me.user.id)) map[me.user.id] = me.user.email ?? me.user.id;
-      }
-      setActors(map);
-      setLoading(false);
-    })();
+    const ids = new Set(list.map((r) => r.actor_user_id).filter(Boolean) as string[]);
+    const map: Record<string, string> = {};
+    const { data: me } = await supabase.auth.getUser();
+    if (me.user) {
+      setSouAdmin(ehAdmin(me.user.email));
+      if (ids.has(me.user.id)) map[me.user.id] = me.user.email ?? me.user.id;
+    }
+    setActors(map);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    void carregar();
+  }, [carregar]);
+
+  /**
+   * Id do registro mais recente de cada lançamento. Desfazer uma alteração
+   * antiga sobrescreveria as posteriores em silêncio — num sistema financeiro
+   * isso é perda de dado. Então só a última da pilha é reversível.
+   */
+  const ultimoPorAlvo = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of rows) {
+      const alvo = alvoDoRegistro(r);
+      if (!alvo) continue;
+      if (!m.has(alvo) || r.id > (m.get(alvo) as number)) m.set(alvo, r.id);
+    }
+    return m;
+  }, [rows]);
+
+  const motivoNaoDesfaz = (r: Row): string | null => {
+    if (!acaoReversivel(r.action)) return "Este tipo de ação não pode ser desfeito.";
+    const alvo = alvoDoRegistro(r);
+    if (!alvo) return "Registro sem lançamento identificável.";
+    if (ultimoPorAlvo.get(alvo) !== r.id) {
+      return "Há uma alteração mais nova neste lançamento — desfaça ela primeiro.";
+    }
+    return null;
+  };
+
+  const desfazer = async (r: Row) => {
+    const p = r.payload as Record<string, any>;
+    setDesfazendo(r.id);
+    // fin_pagamentos não está nos types gerados — mesmo cast usado nas demais telas.
+    const sb = supabase as any;
+    try {
+      let afetadas = 0;
+      if (r.action === "pagamento_alterado") {
+        const patch: Record<string, unknown> = {};
+        for (const [campo, v] of Object.entries(p.mudancas as Record<string, { de: unknown }>)) {
+          if (CAMPOS_NAO_RESTAURAVEIS.has(campo)) continue;
+          patch[campo] = v.de;
+        }
+        if (Object.keys(patch).length === 0) {
+          toast.error("Nada a restaurar neste registro");
+          return;
+        }
+        const { data, error } = await sb.from("fin_pagamentos").update(patch).eq("id", p.id).select("id");
+        if (error) throw error;
+        afetadas = (data ?? []).length;
+      } else if (r.action === "pagamento_criado") {
+        const { data, error } = await sb.from("fin_pagamentos").delete().eq("id", p.registro.id).select("id");
+        if (error) throw error;
+        afetadas = (data ?? []).length;
+      } else {
+        const { data, error } = await sb.from("fin_pagamentos").insert(p.registro).select("id");
+        if (error) throw error;
+        afetadas = (data ?? []).length;
+      }
+      // RLS que bloqueia UPDATE/DELETE devolve sucesso com zero linhas — sem
+      // esta checagem o usuário veria "desfeito" sem nada ter mudado.
+      if (afetadas === 0) {
+        toast.error("Nada foi alterado", {
+          description: "O lançamento não existe mais ou você não tem permissão de escrita.",
+        });
+        return;
+      }
+      toast.success("Desfeito", { description: "A reversão também ficou registrada na auditoria." });
+      await carregar();
+    } catch (err) {
+      toast.error("Não foi possível desfazer", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setDesfazendo(null);
+    }
+  };
 
   const tiposPresentes = useMemo(
     () => Array.from(new Set(rows.map((r) => grupoDaAcao(r.action)))).sort(),
@@ -198,6 +303,7 @@ function AuditPage() {
                 <TableHead>Ator</TableHead>
                 <TableHead>O que mudou</TableHead>
                 <TableHead className="text-right">Payload</TableHead>
+                <TableHead className="w-10" />
                 {souAdmin && <TableHead className="w-10" />}
               </TableRow></TableHeader>
               <TableBody>
@@ -216,6 +322,14 @@ function AuditPage() {
                       {resumo(r) || "—"}
                     </TableCell>
                     <TableCell className="text-right"><PayloadDialog payload={r.payload} /></TableCell>
+                    <TableCell className="text-right">
+                      <BotaoDesfazer
+                        registro={r}
+                        motivoBloqueio={motivoNaoDesfaz(r)}
+                        ocupado={desfazendo === r.id}
+                        aoConfirmar={() => desfazer(r)}
+                      />
+                    </TableCell>
                     {souAdmin && (
                       <TableCell className="text-right">
                         <AlertDialog>
@@ -259,5 +373,70 @@ function AuditPage() {
         </p>
       )}
     </div>
+  );
+}
+
+/** O que o desfazer vai fazer, em português, para a confirmação. */
+function efeitoDoDesfazer(r: Row): string {
+  const p = r.payload as Record<string, any>;
+  if (r.action === "pagamento_criado") {
+    return `O lançamento de ${p.registro?.fornecedor ?? "—"} será excluído.`;
+  }
+  if (r.action === "pagamento_excluido") {
+    return `O lançamento de ${p.registro?.fornecedor ?? "—"} será recriado como estava.`;
+  }
+  const campos = Object.keys((p.mudancas ?? {}) as Record<string, unknown>)
+    .filter((c) => !CAMPOS_NAO_RESTAURAVEIS.has(c));
+  return `Os campos ${campos.join(", ")} voltam ao valor anterior.`;
+}
+
+function BotaoDesfazer({
+  registro, motivoBloqueio, ocupado, aoConfirmar,
+}: {
+  registro: Row;
+  motivoBloqueio: string | null;
+  ocupado: boolean;
+  aoConfirmar: () => void;
+}) {
+  // Bloqueado: botão apagado com o motivo no tooltip, em vez de sumir sem
+  // explicação — assim dá para entender por que aquela linha não reverte.
+  if (motivoBloqueio) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-block">
+              <Button variant="ghost" size="sm" disabled title="">
+                <Undo2 className="h-4 w-4 opacity-40" />
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">{motivoBloqueio}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="sm" disabled={ocupado} title="Desfazer">
+          <Undo2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Desfazer esta alteração?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {efeitoDoDesfazer(registro)} A reversão fica registrada na auditoria — o evento
+            original continua visível.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={aoConfirmar}>Desfazer</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
