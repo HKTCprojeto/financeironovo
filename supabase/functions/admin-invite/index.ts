@@ -89,6 +89,18 @@ Deno.serve(async (req: Request) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  // Registra a ação na audit_log. Só as que mudam algo — "list" não entra.
+  // Nunca derruba a requisição: auditoria falhando não pode impedir o admin
+  // de trabalhar, então o erro só vai para o log da função.
+  const auditar = async (acao: string, dados: Record<string, unknown>) => {
+    const { error } = await admin.from("audit_log").insert({
+      actor_user_id: callerId,
+      action: acao,
+      payload: dados,
+    });
+    if (error) console.error("[audit] falhou:", acao, error.message);
+  };
+
   // ---------- listar usuários ----------
   if (action === "list") {
     const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
@@ -123,8 +135,10 @@ Deno.serve(async (req: Request) => {
         type: "invite", email, options: { redirectTo },
       });
       const link = (gl as any)?.properties?.action_link ?? null;
+      await auditar("usuario_convidado", { email, enviado: false, motivo: error.message });
       return json({ email, sent: false, action_link: link, warn: error.message }, 200, cors);
     }
+    await auditar("usuario_convidado", { email, enviado: true });
     return json({ email, sent: true }, 200, cors);
   }
 
@@ -139,6 +153,7 @@ Deno.serve(async (req: Request) => {
     if (error) return json({ error: error.message }, 400, cors);
     const link = (data as any)?.properties?.action_link ?? null;
     if (!link) return json({ error: "Não foi possível gerar o link." }, 500, cors);
+    await auditar("usuario_acesso_reenviado", { email });
     return json({ email, action_link: link }, 200, cors);
   }
 
@@ -150,6 +165,8 @@ Deno.serve(async (req: Request) => {
     if (password.length < 6) return json({ error: "A senha deve ter ao menos 6 caracteres." }, 400, cors);
     const { error } = await admin.auth.admin.updateUserById(id, { password });
     if (error) return json({ error: error.message }, 400, cors);
+    // A senha em si NUNCA vai para o log — só o fato de ter sido trocada.
+    await auditar("usuario_senha_redefinida", { usuario_id: id });
     return json({ ok: true }, 200, cors);
   }
 
@@ -158,8 +175,11 @@ Deno.serve(async (req: Request) => {
     const id = String(body.id ?? "");
     if (!id) return json({ error: "Usuário inválido." }, 400, cors);
     if (id === callerId) return json({ error: "Você não pode remover a própria conta." }, 400, cors);
+    // Pega o e-mail antes de apagar — depois não há como saber quem era.
+    const { data: alvo } = await admin.auth.admin.getUserById(id);
     const { error } = await admin.auth.admin.deleteUser(id);
     if (error) return json({ error: error.message }, 400, cors);
+    await auditar("usuario_removido", { usuario_id: id, email: alvo?.user?.email ?? null });
     return json({ ok: true }, 200, cors);
   }
 
