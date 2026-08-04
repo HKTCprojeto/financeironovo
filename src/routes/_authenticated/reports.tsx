@@ -12,11 +12,17 @@ import { formatCurrencyBRL, formatDateTime, formatRelative } from "@/lib/format"
 import { SeverityBadge } from "@/lib/status";
 import { mensagemErroEdge } from "@/lib/edge-error";
 import { toast } from "sonner";
-import { RefreshCw, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
+import { RefreshCw, TrendingDown, TrendingUp, AlertTriangle, ArrowUpDown } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip as RTooltip, ReferenceLine, Area, AreaChart,
+  Tooltip as RTooltip, ReferenceLine, Area, AreaChart, PieChart, Pie, Cell, Legend,
 } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatCents, mesAtual, mesCurto } from "@/lib/financeiro";
+import type { Pagamento } from "@/lib/pagamentos-dados";
+import { fetchPagamentos, hojeISO, statusEfetivo, STATUS_META } from "@/lib/pagamentos-dados";
+import { FiltroMeses } from "@/components/pagamentos-ui";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({ meta: [{ title: "Relatórios — Agente CFO" }] }),
@@ -98,21 +104,19 @@ function ReportsPage() {
     })();
   }, []);
 
+  // A análise de pagamentos lê fin_pagamentos direto e não depende da VPS —
+  // por isso fica FORA do early-return abaixo. Antes, com instances vazia, a
+  // tela inteira virava um "Sem dados ainda" e nada mais era renderizado.
+  //
+  // Sem VPS, os relatórios de caixa/pipeline/custo de IA não têm o que mostrar
+  // (dashboard_snapshots fica vazia). Em vez de exibir um card vazio pedindo
+  // configuração, some da tela — a decisão foi do Rodrigo (04/08/2026). Os
+  // componentes seguem abaixo intactos e voltam sozinhos quando a VPS existir.
   if (hasInstance === false) {
     return (
       <div className="space-y-6">
         <PageHeader />
-        <Card>
-          <CardContent className="py-10">
-            <EmptyState
-              title="Sem dados ainda"
-              description="Conecte seu ERP em /onboarding ou rode setup.sh na VPS para começar a ver relatórios."
-            />
-            <div className="flex justify-center mt-4">
-              <Button asChild><Link to="/onboarding">Configurar agora</Link></Button>
-            </div>
-          </CardContent>
-        </Card>
+        <RelatorioPagamentos />
       </div>
     );
   }
@@ -120,6 +124,7 @@ function ReportsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <PageHeader />
+      <RelatorioPagamentos />
       <CashCard instanceId={instanceId} />
       {hasCrm && <PipelineCard instanceId={instanceId} />}
       <LlmCostCard />
@@ -128,12 +133,461 @@ function ReportsPage() {
   );
 }
 
+/**
+ * Relatórios de pagamentos — em tabela, não em gráfico.
+ *
+ * O Painel responde "como está" visualmente; aqui é o texto que se lê linha a
+ * linha, confere e exporta. Filtro de meses (múltiplos) e de status no topo
+ * valem para todas as abas.
+ */
+const STATUS_FILTROS = [
+  { chave: "pago", rotulo: "Pagos" },
+  { chave: "a_pagar", rotulo: "A pagar" },
+  { chave: "atrasado", rotulo: "Vencidos" },
+] as const;
+
+type ChaveStatus = (typeof STATUS_FILTROS)[number]["chave"];
+
+function RelatorioPagamentos() {
+  const hoje = hojeISO();
+  const [meses, setMeses] = useState<string[]>([mesAtual()]);
+  const [status, setStatus] = useState<ChaveStatus[]>([]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["painel-pagamentos"], // mesma chave do Painel: reaproveita o cache
+    queryFn: fetchPagamentos,
+  });
+
+  const rubricas = useMemo(() => data?.rubricas ?? [], [data]);
+  const pagamentos = useMemo(() => data?.pagamentos ?? [], [data]);
+
+  const rubricaInfo = useMemo(() => {
+    const m = new Map<string, { nome: string; grupo: string }>();
+    rubricas.forEach((r) =>
+      m.set(r.codigo, { nome: r.nome || r.codigo, grupo: r.nivel1_nome || "Sem grupo" }),
+    );
+    return m;
+  }, [rubricas]);
+
+  const mesesDisponiveis = useMemo(
+    () =>
+      Array.from(new Set(pagamentos.map((p) => p.mes_ref)))
+        .filter(Boolean)
+        .sort()
+        .reverse(),
+    [pagamentos],
+  );
+
+  // Filtros vazios = sem restrição, para a tela nunca ficar vazia sem querer.
+  const linhas = useMemo(() => {
+    return pagamentos
+      .filter((p) => meses.length === 0 || meses.includes(p.mes_ref))
+      .filter((p) => status.length === 0 || status.includes(statusEfetivo(p, hoje)))
+      .sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento));
+  }, [pagamentos, meses, status, hoje]);
+
+  const total = useMemo(() => linhas.reduce((s, p) => s + p.valor_centavos, 0), [linhas]);
+
+  const { ordem, alternar } = useOrdem({ campo: "data_vencimento", dir: "asc" });
+  const linhasOrdenadas = useMemo(
+    () =>
+      ordenar(linhas, ordem, (p, campo) => {
+        if (campo === "rubrica") return rubricaInfo.get(p.rubrica_codigo)?.nome ?? p.rubrica_codigo;
+        if (campo === "status") return STATUS_META[statusEfetivo(p, hoje)].label;
+        // "Pago em" vazio vai para o fim em ordem crescente, em vez de liderar.
+        if (campo === "data_pagamento") return p.data_pagamento ?? "￿";
+        return (p as unknown as Record<string, unknown>)[campo];
+      }),
+    [linhas, ordem, rubricaInfo, hoje],
+  );
+
+  // ---- consolidações das outras abas ----
+  const porMes = useMemo(() => {
+    const m = new Map<string, { total: number; pago: number; aPagar: number; vencido: number; qtd: number }>();
+    for (const p of linhas) {
+      const cur = m.get(p.mes_ref) ?? { total: 0, pago: 0, aPagar: 0, vencido: 0, qtd: 0 };
+      const ef = statusEfetivo(p, hoje);
+      cur.total += p.valor_centavos;
+      cur.qtd += 1;
+      if (ef === "pago") cur.pago += p.valor_centavos;
+      else if (ef === "atrasado") cur.vencido += p.valor_centavos;
+      else cur.aPagar += p.valor_centavos;
+      m.set(p.mes_ref, cur);
+    }
+    return Array.from(m, ([mes, v]) => ({ mes, ...v })).sort((a, b) => b.mes.localeCompare(a.mes));
+  }, [linhas, hoje]);
+
+  const { ordem: ordemMes, alternar: alternarMes } = useOrdem({ campo: "mes", dir: "desc" });
+  const porMesOrdenado = useMemo(
+    () => ordenar(porMes, ordemMes, (m, campo) => (m as unknown as Record<string, unknown>)[campo]),
+    [porMes, ordemMes],
+  );
+
+  const agrupar = (chave: (p: Pagamento) => string) => {
+    const m = new Map<string, { cents: number; qtd: number; meses: Set<string> }>();
+    for (const p of linhas) {
+      const k = chave(p);
+      const cur = m.get(k) ?? { cents: 0, qtd: 0, meses: new Set<string>() };
+      cur.cents += p.valor_centavos;
+      cur.qtd += 1;
+      cur.meses.add(p.mes_ref);
+      m.set(k, cur);
+    }
+    return Array.from(m, ([nome, v]) => ({
+      nome,
+      cents: v.cents,
+      qtd: v.qtd,
+      meses: v.meses.size,
+      pct: total > 0 ? (v.cents / total) * 100 : 0,
+    })).sort((a, b) => b.cents - a.cents);
+  };
+
+  const porFornecedor = useMemo(() => agrupar((p) => p.fornecedor), [linhas, total]);
+  const porRubrica = useMemo(
+    () => agrupar((p) => rubricaInfo.get(p.rubrica_codigo)?.nome ?? p.rubrica_codigo),
+    [linhas, total, rubricaInfo],
+  );
+  const porDepartamento = useMemo(() => agrupar((p) => p.departamento || "—"), [linhas, total]);
+  const porGrupo = useMemo(
+    () => agrupar((p) => rubricaInfo.get(p.rubrica_codigo)?.grupo ?? "Sem grupo"),
+    [linhas, total, rubricaInfo],
+  );
+
+  const alternarStatus = (c: ChaveStatus) =>
+    setStatus(status.includes(c) ? status.filter((x) => x !== c) : [...status, c]);
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="py-6 text-sm text-destructive">
+          Erro ao carregar pagamentos: {(error as Error).message}
+        </CardContent>
+      </Card>
+    );
+  }
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground">Carregando pagamentos…</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold tracking-tight">Pagamentos</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          {STATUS_FILTROS.map((s) => {
+            const ativo = status.includes(s.chave);
+            return (
+              <Button
+                key={s.chave}
+                variant={ativo ? "default" : "outline"}
+                size="sm"
+                className="gap-1.5 font-normal"
+                onClick={() => alternarStatus(s.chave)}
+              >
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: STATUS_META[s.chave].color }}
+                />
+                {s.rotulo}
+              </Button>
+            );
+          })}
+          <FiltroMeses meses={mesesDisponiveis} selecionados={meses} onMudar={setMeses} />
+        </div>
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        <strong className="font-mono text-foreground">{linhas.length}</strong> lançamentos ·{" "}
+        <strong className="font-mono text-foreground">{formatCents(total)}</strong>
+        {status.length === 0 && " · todos os status"}
+        {meses.length === 0 && " · todos os meses"}
+      </p>
+
+      <Tabs defaultValue="lancamentos">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
+          <TabsTrigger value="mes">Por mês</TabsTrigger>
+          <TabsTrigger value="fornecedor">Por fornecedor</TabsTrigger>
+          <TabsTrigger value="rubrica">Por rubrica</TabsTrigger>
+          <TabsTrigger value="grupo">Por grupo</TabsTrigger>
+          <TabsTrigger value="departamento">Por departamento</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="lancamentos">
+          <Card>
+            <CardContent className="overflow-x-auto p-0">
+              {linhas.length === 0 ? (
+                <EmptyState title="Nenhum lançamento com esses filtros." />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <ThOrd campo="fornecedor" ordem={ordem} alternar={alternar}>Fornecedor</ThOrd>
+                      <ThOrd campo="rubrica" ordem={ordem} alternar={alternar}>Rubrica</ThOrd>
+                      <ThOrd campo="departamento" ordem={ordem} alternar={alternar}>Depto.</ThOrd>
+                      <ThOrd campo="tipo" ordem={ordem} alternar={alternar}>Tipo</ThOrd>
+                      <ThOrd campo="data_vencimento" ordem={ordem} alternar={alternar}>Vencimento</ThOrd>
+                      <ThOrd campo="data_pagamento" ordem={ordem} alternar={alternar}>Pago em</ThOrd>
+                      <ThOrd campo="status" ordem={ordem} alternar={alternar}>Status</ThOrd>
+                      <ThOrd campo="valor_centavos" ordem={ordem} alternar={alternar} alinharDireita>
+                        Valor
+                      </ThOrd>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {linhasOrdenadas.map((p) => {
+                      const ef = statusEfetivo(p, hoje);
+                      return (
+                        <TableRow key={p.id}>
+                          <TableCell className="font-medium">{p.fornecedor}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {rubricaInfo.get(p.rubrica_codigo)?.nome ?? p.rubrica_codigo}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {p.departamento || "—"}
+                          </TableCell>
+                          <TableCell className="text-sm capitalize text-muted-foreground">
+                            {p.tipo === "variavel" ? "variável" : p.tipo}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-sm">
+                            {dataBR(p.data_vencimento)}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                            {p.data_pagamento ? dataBR(p.data_pagamento) : "—"}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs"
+                              style={{ color: STATUS_META[ef].color }}
+                            >
+                              <span
+                                className="h-1.5 w-1.5 rounded-full"
+                                style={{ background: STATUS_META[ef].color }}
+                              />
+                              {STATUS_META[ef].label}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-mono tabular-nums">
+                            {formatCents(p.valor_centavos)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    <TableRow className="bg-muted/40 font-semibold">
+                      <TableCell colSpan={7}>Total ({linhas.length})</TableCell>
+                      <TableCell className="text-right font-mono tabular-nums">
+                        {formatCents(total)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="mes">
+          <Card>
+            <CardContent className="overflow-x-auto p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <ThOrd campo="mes" ordem={ordemMes} alternar={alternarMes}>Mês</ThOrd>
+                    <ThOrd campo="qtd" ordem={ordemMes} alternar={alternarMes} alinharDireita>Lançs.</ThOrd>
+                    <ThOrd campo="pago" ordem={ordemMes} alternar={alternarMes} alinharDireita>Pago</ThOrd>
+                    <ThOrd campo="aPagar" ordem={ordemMes} alternar={alternarMes} alinharDireita>A pagar</ThOrd>
+                    <ThOrd campo="vencido" ordem={ordemMes} alternar={alternarMes} alinharDireita>Vencido</ThOrd>
+                    <ThOrd campo="total" ordem={ordemMes} alternar={alternarMes} alinharDireita>Total</ThOrd>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {porMesOrdenado.map((m) => (
+                    <TableRow key={m.mes}>
+                      <TableCell className="font-medium">{mesCurto(m.mes)}</TableCell>
+                      <TableCell className="text-right font-mono tabular-nums">{m.qtd}</TableCell>
+                      <TableCell className="text-right font-mono tabular-nums text-emerald-600">
+                        {formatCents(m.pago)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums text-amber-600">
+                        {formatCents(m.aPagar)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums text-red-600">
+                        {formatCents(m.vencido)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-semibold tabular-nums">
+                        {formatCents(m.total)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="fornecedor">
+          <TabelaConsolidada dados={porFornecedor} coluna="Fornecedor" mostrarRecorrencia />
+        </TabsContent>
+        <TabsContent value="rubrica">
+          <TabelaConsolidada dados={porRubrica} coluna="Rubrica" />
+        </TabsContent>
+        <TabsContent value="grupo">
+          <TabelaConsolidada dados={porGrupo} coluna="Grupo (nível 1)" />
+        </TabsContent>
+        <TabsContent value="departamento">
+          <TabelaConsolidada dados={porDepartamento} coluna="Departamento" />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function dataBR(iso: string): string {
+  return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+}
+
+// ---------- ordenação das tabelas ----------
+type Ordem = { campo: string; dir: "asc" | "desc" };
+
+/** Estado de ordenação com clique alternando asc/desc na mesma coluna. */
+function useOrdem(inicial: Ordem) {
+  const [ordem, setOrdem] = useState<Ordem>(inicial);
+  const alternar = (campo: string) =>
+    setOrdem((o) =>
+      o.campo === campo
+        ? { campo, dir: o.dir === "asc" ? "desc" : "asc" }
+        : // Texto começa em A→Z; número e data começam do maior, que é o que
+          // interessa num relatório financeiro (maiores valores primeiro).
+          { campo, dir: "asc" },
+    );
+  return { ordem, alternar };
+}
+
+/**
+ * Ordena por um acessor. Strings usam localeCompare pt-BR para acento não
+ * jogar "Água" depois de "Zinco".
+ */
+function ordenar<T>(itens: T[], ordem: Ordem, acessor: (x: T, campo: string) => unknown): T[] {
+  const mult = ordem.dir === "asc" ? 1 : -1;
+  return [...itens].sort((a, b) => {
+    const va = acessor(a, ordem.campo);
+    const vb = acessor(b, ordem.campo);
+    if (typeof va === "number" && typeof vb === "number") return (va - vb) * mult;
+    return String(va ?? "").localeCompare(String(vb ?? ""), "pt-BR") * mult;
+  });
+}
+
+/** Cabeçalho clicável. Mostra a seta só na coluna ativa. */
+function ThOrd({
+  campo,
+  ordem,
+  alternar,
+  children,
+  alinharDireita = false,
+}: {
+  campo: string;
+  ordem: Ordem;
+  alternar: (c: string) => void;
+  children: React.ReactNode;
+  alinharDireita?: boolean;
+}) {
+  const ativa = ordem.campo === campo;
+  return (
+    <TableHead className={alinharDireita ? "text-right" : undefined}>
+      <button
+        type="button"
+        onClick={() => alternar(campo)}
+        className={`inline-flex items-center gap-1 hover:text-foreground ${
+          ativa ? "font-semibold text-foreground" : ""
+        } ${alinharDireita ? "flex-row-reverse" : ""}`}
+      >
+        {children}
+        <ArrowUpDown className={`h-3 w-3 ${ativa ? "opacity-100" : "opacity-30"}`} />
+        {ativa && <span className="sr-only">{ordem.dir === "asc" ? "crescente" : "decrescente"}</span>}
+      </button>
+    </TableHead>
+  );
+}
+
+/** Tabela de consolidação usada pelas abas por fornecedor / rubrica / grupo / depto. */
+function TabelaConsolidada({
+  dados,
+  coluna,
+  mostrarRecorrencia = false,
+}: {
+  dados: Array<{ nome: string; cents: number; qtd: number; meses: number; pct: number }>;
+  coluna: string;
+  mostrarRecorrencia?: boolean;
+}) {
+  // Maior valor primeiro: é a leitura que interessa numa consolidação.
+  const { ordem, alternar } = useOrdem({ campo: "cents", dir: "desc" });
+  const ordenados = useMemo(
+    () => ordenar(dados, ordem, (d, campo) => (d as unknown as Record<string, unknown>)[campo]),
+    [dados, ordem],
+  );
+
+  if (dados.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-6">
+          <EmptyState title="Nada para consolidar com esses filtros." />
+        </CardContent>
+      </Card>
+    );
+  }
+  const total = dados.reduce((s, d) => s + d.cents, 0);
+  return (
+    <Card>
+      <CardContent className="overflow-x-auto p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <ThOrd campo="nome" ordem={ordem} alternar={alternar}>{coluna}</ThOrd>
+              <ThOrd campo="qtd" ordem={ordem} alternar={alternar} alinharDireita>Lançs.</ThOrd>
+              {mostrarRecorrencia && (
+                <ThOrd campo="meses" ordem={ordem} alternar={alternar} alinharDireita>Meses</ThOrd>
+              )}
+              <ThOrd campo="pct" ordem={ordem} alternar={alternar} alinharDireita>% do total</ThOrd>
+              <ThOrd campo="cents" ordem={ordem} alternar={alternar} alinharDireita>Valor</ThOrd>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ordenados.map((d) => (
+              <TableRow key={d.nome}>
+                <TableCell className="font-medium">{d.nome}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{d.qtd}</TableCell>
+                {mostrarRecorrencia && (
+                  <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                    {d.meses}
+                  </TableCell>
+                )}
+                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                  {d.pct.toFixed(1)}%
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {formatCents(d.cents)}
+                </TableCell>
+              </TableRow>
+            ))}
+            <TableRow className="bg-muted/40 font-semibold">
+              <TableCell colSpan={mostrarRecorrencia ? 4 : 3}>Total ({dados.length})</TableCell>
+              <TableCell className="text-right font-mono tabular-nums">
+                {formatCents(total)}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+
 function PageHeader() {
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">Relatórios</h1>
       <p className="text-sm text-muted-foreground">
-        Visão financeira consolidada — caixa, pipeline, custo de IA e eventos críticos.
+        Pagamentos em tabela — filtre por status e mês, clique nas colunas para ordenar.
       </p>
     </div>
   );

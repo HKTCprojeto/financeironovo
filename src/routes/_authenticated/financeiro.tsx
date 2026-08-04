@@ -3,8 +3,6 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Wallet,
-  ChevronLeft,
-  ChevronRight,
   AlertTriangle,
   ListTree,
   Building2,
@@ -24,7 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCents, formatReais, mesAtual, mesLabel, shiftMes } from "@/lib/financeiro";
+import { formatCents, formatReais, mesAtual } from "@/lib/financeiro";
+import { FiltroMeses } from "@/components/pagamentos-ui";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — HKTC" }] }),
@@ -81,7 +80,8 @@ type Linha = { nome: string; sub?: string; count: number; cents: number };
 
 function FinanceiroPage() {
   const hoje = hojeISO();
-  const [mes, setMes] = useState<string>(mesAtual());
+  // Lista vazia = todos os meses; mesmo critério do Painel e dos Relatórios.
+  const [meses, setMeses] = useState<string[]>([mesAtual()]);
   const [buscaRub, setBuscaRub] = useState("");
   const { data, isLoading, error } = useQuery({
     queryKey: ["financeiro-pag"],
@@ -106,7 +106,10 @@ function FinanceiroPage() {
     [pagamentos],
   );
 
-  const doMes = useMemo(() => pagamentos.filter((p) => p.mes_ref === mes), [pagamentos, mes]);
+  const doMes = useMemo(
+    () => (meses.length === 0 ? pagamentos : pagamentos.filter((p) => meses.includes(p.mes_ref))),
+    [pagamentos, meses],
+  );
 
   const ag = useMemo(() => {
     let total = 0,
@@ -194,27 +197,7 @@ function FinanceiroPage() {
           <h1 className="text-2xl font-bold tracking-tight">Financeiro</h1>
           <span className="text-sm text-muted-foreground">· para onde vai o dinheiro</span>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setMes(shiftMes(mes, -1))}
-            aria-label="Mês anterior"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="min-w-[150px] text-center font-semibold capitalize">
-            {mesLabel(mes)}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setMes(shiftMes(mes, 1))}
-            aria-label="Próximo mês"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <FiltroMeses meses={mesesComDados} selecionados={meses} onMudar={setMeses} />
       </div>
 
       {isLoading ? (
@@ -222,15 +205,10 @@ function FinanceiroPage() {
       ) : doMes.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            <p>Nenhum pagamento em {mesLabel(mes)}.</p>
-            {mesesComDados.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => setMes(mesesComDados[0])}
-              >
-                Ir para {mesLabel(mesesComDados[0])}
+            <p>Nenhum pagamento nos meses selecionados.</p>
+            {meses.length > 0 && (
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => setMeses([])}>
+                Ver todos os meses
               </Button>
             )}
           </CardContent>
@@ -239,7 +217,7 @@ function FinanceiroPage() {
         <>
           {/* KPIs */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <Kpi titulo="Total do mês" cents={ag.total} sub={`${doMes.length} lançamentos`} />
+            <Kpi titulo="Total do período" cents={ag.total} sub={`${doMes.length} lançamentos`} />
             <Kpi titulo="Fixos" cents={ag.fixo} sub={pct(ag.fixo, ag.total)} />
             <Kpi titulo="Variáveis" cents={ag.variavel} sub={pct(ag.variavel, ag.total)} />
             <Kpi titulo="Impostos" cents={ag.imposto} sub={pct(ag.imposto, ag.total)} />

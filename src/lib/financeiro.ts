@@ -56,6 +56,18 @@ export function mesLabel(ym: string): string {
   return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(d);
 }
 
+const MESES_ABREV = [
+  "jan", "fev", "mar", "abr", "mai", "jun",
+  "jul", "ago", "set", "out", "nov", "dez",
+];
+
+/** Rótulo curto para filtros e chips: "Ago/2026". */
+export function mesCurto(ym: string): string {
+  const [ano, m] = ym.split("-");
+  const nome = MESES_ABREV[Number(m) - 1] ?? m;
+  return `${nome.charAt(0).toUpperCase()}${nome.slice(1)}/${ano}`;
+}
+
 // ---------- moeda ----------
 const fmtBRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 export function formatCents(c: number | null | undefined): string {

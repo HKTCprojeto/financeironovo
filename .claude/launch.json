@@ -5,7 +5,14 @@
       "name": "financeiro-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 8080
+      "port": 8080,
+      "autoPort": false
+    },
+    {
+      "name": "financeiro-attach",
+      "url": "http://localhost:8080",
+      "port": 8080,
+      "autoPort": false
     }
   ]
 }

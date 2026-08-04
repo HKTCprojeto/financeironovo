@@ -68,7 +68,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatCents, formatReais, parseBRLToCents } from "@/lib/financeiro";
+import { formatCents, formatReais, mesAtual, parseBRLToCents } from "@/lib/financeiro";
 
 export const Route = createFileRoute("/_authenticated/pagamentos")({
   head: () => ({ meta: [{ title: "Pagamentos — HKTC" }] }),
@@ -487,7 +487,9 @@ function PagamentosPage() {
   // filtros de pagamentos
   const [depto, setDepto] = useState<string>("todos");
   const [rubricaFiltro, setRubricaFiltro] = useState<string>("todas");
-  const [mesRef, setMesRef] = useState<string>("todos");
+  // Abre no mês corrente, como o Painel e o Financeiro já faziam. Se o mês não
+  // tiver lançamento, o efeito logo abaixo devolve para "Todos os meses".
+  const [mesRef, setMesRef] = useState<string>(mesAtual());
   const [buscaPag, setBuscaPag] = useState("");
   const [buscaRub, setBuscaRub] = useState("");
 
