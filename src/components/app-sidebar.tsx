@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ExternalLink,
   MessageCircle,
+  Bot,
   Send,
   Receipt,
   Users,
@@ -47,7 +48,6 @@ const mainItems = [
   { title: "Painel", url: "/", icon: LayoutDashboard, exact: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
   { title: "Pagamentos", url: "/pagamentos", icon: Receipt },
-  { title: "Conversar com Lívia", url: "/chat", icon: MessageCircle },
   { title: "Relatórios", url: "/reports", icon: BarChart3 },
   { title: "Metas", url: "/goals", icon: Target },
   { title: "Automações", url: "/automations", icon: Zap },
@@ -55,7 +55,12 @@ const mainItems = [
   { title: "Integrações", url: "/integrations", icon: Plug },
 ];
 
+// Canais = por onde se fala com a Lívia. O chat vem primeiro por ser o canal
+// que já funciona; WhatsApp e Telegram são as telas de configuração dos outros.
+// Ícone diferente do WhatsApp de propósito: dois balões iguais lado a lado
+// confundiriam quem bate o olho no menu.
 const channelItems = [
+  { title: "Conversar com Lívia", url: "/chat", icon: Bot },
   { title: "WhatsApp", url: "/settings/whatsapp", icon: MessageCircle },
   // A rota /settings/telegram ainda não existe — o item levava a um 404.
   // Fica visível (é roadmap) mas desabilitado até a tela ser construída.
