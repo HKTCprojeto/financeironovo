@@ -12,7 +12,8 @@ import { formatCurrencyBRL, formatDateTime, formatRelative } from "@/lib/format"
 import { SeverityBadge } from "@/lib/status";
 import { mensagemErroEdge } from "@/lib/edge-error";
 import { toast } from "sonner";
-import { RefreshCw, TrendingDown, TrendingUp, AlertTriangle, ArrowUpDown } from "lucide-react";
+import { RefreshCw, TrendingDown, TrendingUp, AlertTriangle, ArrowUpDown, Download } from "lucide-react";
+import { exportarXlsx } from "@/lib/exportar-xlsx";
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RTooltip, ReferenceLine, Area, AreaChart, PieChart, Pie, Cell, Legend,
@@ -255,6 +256,103 @@ function RelatorioPagamentos() {
   const alternarStatus = (c: ChaveStatus) =>
     setStatus(status.includes(c) ? status.filter((x) => x !== c) : [...status, c]);
 
+  const [exportando, setExportando] = useState(false);
+
+  /** Descreve os filtros em vigor — vai no subtítulo de cada aba do arquivo. */
+  const descricaoFiltros = () => {
+    const partes = [
+      meses.length === 0 ? "todos os meses" : meses.map(mesCurto).join(", "),
+      status.length === 0
+        ? "todos os status"
+        : STATUS_FILTROS.filter((s) => status.includes(s.chave))
+            .map((s) => s.rotulo.toLowerCase())
+            .join(", "),
+    ];
+    return `${partes.join(" · ")} — gerado em ${new Date().toLocaleString("pt-BR")}`;
+  };
+
+  const exportar = async () => {
+    setExportando(true);
+    try {
+      const consolidada = (dados: typeof porFornecedor, coluna: string, recorrencia = false) => ({
+        colunas: [
+          { cabecalho: coluna, chave: "nome" as const },
+          { cabecalho: "Lançamentos", chave: "qtd", formato: "inteiro" as const, largura: 14 },
+          ...(recorrencia
+            ? [{ cabecalho: "Meses", chave: "meses", formato: "inteiro" as const, largura: 10 }]
+            : []),
+          { cabecalho: "% do total", chave: "pct", formato: "percentual" as const, largura: 12 },
+          { cabecalho: "Valor", chave: "reais", formato: "moeda" as const, largura: 16 },
+        ],
+        linhas: dados.map((d) => ({ ...d, reais: d.cents / 100 })),
+        totalizar: ["qtd", "reais"],
+      });
+
+      await exportarXlsx({
+        arquivo: `pagamentos-${new Date().toISOString().slice(0, 10)}.xlsx`,
+        titulo: "Pagamentos — Agente CFO HKTC",
+        subtitulo: descricaoFiltros(),
+        abas: [
+          {
+            nome: "Lançamentos",
+            colunas: [
+              { cabecalho: "Fornecedor", chave: "fornecedor" },
+              { cabecalho: "Rubrica", chave: "rubrica" },
+              { cabecalho: "Departamento", chave: "departamento" },
+              { cabecalho: "Tipo", chave: "tipo", largura: 12 },
+              { cabecalho: "Vencimento", chave: "vencimento", formato: "data", largura: 14 },
+              { cabecalho: "Pago em", chave: "pagoEm", formato: "data", largura: 14 },
+              { cabecalho: "Status", chave: "status", largura: 12 },
+              { cabecalho: "Valor", chave: "reais", formato: "moeda", largura: 16 },
+            ],
+            linhas: linhasOrdenadas.map((p) => ({
+              fornecedor: p.fornecedor,
+              rubrica: rubricaInfo.get(p.rubrica_codigo)?.nome ?? p.rubrica_codigo,
+              departamento: p.departamento || "—",
+              tipo: p.tipo === "variavel" ? "Variável" : p.tipo === "fixo" ? "Fixo" : "Imposto",
+              vencimento: p.data_vencimento,
+              pagoEm: p.data_pagamento,
+              status: STATUS_META[statusEfetivo(p, hoje)].label,
+              reais: p.valor_centavos / 100,
+            })),
+            totalizar: ["reais"],
+          },
+          {
+            nome: "Por mês",
+            colunas: [
+              { cabecalho: "Mês", chave: "mesLabel", largura: 12 },
+              { cabecalho: "Lançamentos", chave: "qtd", formato: "inteiro", largura: 14 },
+              { cabecalho: "Pago", chave: "pagoR", formato: "moeda", largura: 16 },
+              { cabecalho: "A pagar", chave: "aPagarR", formato: "moeda", largura: 16 },
+              { cabecalho: "Vencido", chave: "vencidoR", formato: "moeda", largura: 16 },
+              { cabecalho: "Total", chave: "totalR", formato: "moeda", largura: 16 },
+            ],
+            linhas: porMesOrdenado.map((m) => ({
+              mesLabel: mesCurto(m.mes),
+              qtd: m.qtd,
+              pagoR: m.pago / 100,
+              aPagarR: m.aPagar / 100,
+              vencidoR: m.vencido / 100,
+              totalR: m.total / 100,
+            })),
+            totalizar: ["qtd", "pagoR", "aPagarR", "vencidoR", "totalR"],
+          },
+          { nome: "Por fornecedor", ...consolidada(porFornecedor, "Fornecedor", true) },
+          { nome: "Por rubrica", ...consolidada(porRubrica, "Rubrica") },
+          { nome: "Por grupo", ...consolidada(porGrupo, "Grupo (nível 1)") },
+          { nome: "Por departamento", ...consolidada(porDepartamento, "Departamento") },
+        ],
+      });
+      toast.success("Planilha gerada");
+    } catch (err) {
+      toast.error("Falha ao gerar a planilha", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setExportando(false);
+    }
+  };
+
   if (error) {
     return (
       <Card>
@@ -292,6 +390,16 @@ function RelatorioPagamentos() {
             );
           })}
           <FiltroMeses meses={mesesDisponiveis} selecionados={meses} onMudar={setMeses} />
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 font-normal"
+            onClick={exportar}
+            disabled={exportando || linhas.length === 0}
+          >
+            <Download className="h-4 w-4" />
+            {exportando ? "Gerando…" : "Exportar XLSX"}
+          </Button>
         </div>
       </div>
 
