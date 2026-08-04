@@ -14,7 +14,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Search, Undo2 } from "lucide-react";
+import { Trash2, Search, Undo2, Eye } from "lucide-react";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
@@ -23,7 +23,9 @@ import { formatRelative } from "@/lib/format";
 import { formatCents } from "@/lib/financeiro";
 import { ehAdmin } from "@/lib/admin";
 import { PageSkeleton, EmptyState } from "@/components/states";
-import { PayloadDialog } from "./events";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/audit")({
   head: () => ({ meta: [{ title: "Auditoria — Agente CFO" }] }),
@@ -38,16 +40,87 @@ type Row = {
   created_at: string;
 };
 
+/**
+ * Formato do `payload` gravado na audit_log.
+ *
+ * A trigger fin_audit() põe `mudancas` num UPDATE e `registro` num
+ * INSERT/DELETE; as ações de usuário gravam campos avulsos (email etc.), daí
+ * o índice aberto no fim.
+ */
+type PayloadAuditoria = {
+  id?: string;
+  ref?: string;
+  mudancas?: Record<string, { de: unknown; para: unknown }>;
+  registro?: Record<string, unknown>;
+  [chave: string]: unknown;
+};
+
 // Campos cujo valor é em centavos — mostrar como moeda, não como número cru.
 const CAMPOS_MOEDA = new Set(["valor_centavos", "teto_padrao_centavos"]);
 
 // Ruído de banco: muda em toda escrita e não diz nada a quem audita.
 const CAMPOS_OCULTOS = new Set(["updated_at", "created_at"]);
 
+/** Nome de coluna do banco -> como a pessoa chama aquilo. */
+const ROTULO_CAMPO: Record<string, string> = {
+  id: "Identificador",
+  fornecedor: "Fornecedor",
+  servico: "Serviço",
+  descricao: "Descrição",
+  departamento: "Departamento",
+  valor_centavos: "Valor",
+  data_vencimento: "Vencimento",
+  data_pagamento: "Pago em",
+  dia_vencimento: "Dia do vencimento",
+  tipo: "Tipo",
+  periodicidade: "Periodicidade",
+  status: "Status",
+  rubrica_codigo: "Rubrica",
+  conta_contabil: "Conta contábil",
+  mes_ref: "Mês de referência",
+  origem: "Origem",
+  created_at: "Criado em",
+  updated_at: "Atualizado em",
+  nome: "Nome",
+  codigo: "Código",
+  ativa: "Ativa",
+  nivel1_nome: "Grupo (nível 1)",
+  email: "E-mail",
+  usuario_id: "Usuário",
+  enviado: "E-mail enviado",
+  motivo: "Motivo",
+};
+
+const VALOR_TRADUZIDO: Record<string, Record<string, string>> = {
+  status: { a_pagar: "A pagar", pago: "Pago", atrasado: "Vencido", previsto: "Previsto" },
+  tipo: { fixo: "Fixo", variavel: "Variável", imposto: "Imposto" },
+};
+
+function rotulo(campo: string): string {
+  return ROTULO_CAMPO[campo] ?? campo.replace(/_/g, " ");
+}
+
 function valorLegivel(campo: string, v: unknown): string {
-  if (v === null || v === undefined) return "vazio";
+  if (v === null || v === undefined || v === "") return "vazio";
   if (CAMPOS_MOEDA.has(campo) && typeof v === "number") return formatCents(v);
-  return String(v);
+  if (typeof v === "boolean") return v ? "sim" : "não";
+
+  const s = String(v);
+  const traduzido = VALOR_TRADUZIDO[campo]?.[s];
+  if (traduzido) return traduzido;
+
+  // data (yyyy-mm-dd) e timestamp (com T) viram formato brasileiro
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return `${s.slice(8, 10)}/${s.slice(5, 7)}/${s.slice(0, 4)}`;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const d = new Date(s);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleString("pt-BR", {
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      });
+    }
+  }
+  return s;
 }
 
 /** Grupo da ação: pagamento_alterado -> "pagamento". Usado no filtro por tipo. */
@@ -64,7 +137,7 @@ const CAMPOS_NAO_RESTAURAVEIS = new Set(["id", "created_at", "updated_at"]);
  * do mesmo pagamento — só a última pode ser desfeita.
  */
 function alvoDoRegistro(r: Row): string | null {
-  const p = r.payload as Record<string, unknown> | null;
+  const p = r.payload as PayloadAuditoria | null;
   if (!p || typeof p !== "object") return null;
   if (typeof p.id === "string") return p.id;
   const reg = p.registro as Record<string, unknown> | undefined;
@@ -84,14 +157,16 @@ function acaoReversivel(action: string): boolean {
 
 /** Resumo de uma linha em texto — alimenta a coluna e a busca. */
 function resumo(r: Row): string {
-  const p = r.payload as Record<string, unknown> | null;
+  const p = r.payload as PayloadAuditoria | null;
   if (!p || typeof p !== "object") return "";
 
   const mudancas = p.mudancas as Record<string, { de: unknown; para: unknown }> | undefined;
   if (mudancas) {
     const partes = Object.entries(mudancas)
       .filter(([campo]) => !CAMPOS_OCULTOS.has(campo))
-      .map(([campo, v]) => `${campo}: ${valorLegivel(campo, v.de)} → ${valorLegivel(campo, v.para)}`);
+      .map(
+        ([campo, v]) => `${rotulo(campo)}: ${valorLegivel(campo, v.de)} → ${valorLegivel(campo, v.para)}`,
+      );
     const ref = p.ref ? `${p.ref} · ` : "";
     return partes.length ? ref + partes.join(" · ") : ref + "sem mudança relevante";
   }
@@ -170,9 +245,10 @@ function AuditPage() {
   };
 
   const desfazer = async (r: Row) => {
-    const p = r.payload as Record<string, any>;
+    const p = r.payload as PayloadAuditoria;
     setDesfazendo(r.id);
     // fin_pagamentos não está nos types gerados — mesmo cast usado nas demais telas.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any;
     try {
       let afetadas = 0;
@@ -189,14 +265,25 @@ function AuditPage() {
         const { data, error } = await sb.from("fin_pagamentos").update(patch).eq("id", p.id).select("id");
         if (error) throw error;
         afetadas = (data ?? []).length;
-      } else if (r.action === "pagamento_criado") {
-        const { data, error } = await sb.from("fin_pagamentos").delete().eq("id", p.registro.id).select("id");
-        if (error) throw error;
-        afetadas = (data ?? []).length;
       } else {
-        const { data, error } = await sb.from("fin_pagamentos").insert(p.registro).select("id");
-        if (error) throw error;
-        afetadas = (data ?? []).length;
+        // criado e excluído só existem com `registro` — sem ele não há o que reverter
+        if (!p.registro) {
+          toast.error("Registro sem os dados do lançamento");
+          return;
+        }
+        if (r.action === "pagamento_criado") {
+          const { data, error } = await sb
+            .from("fin_pagamentos")
+            .delete()
+            .eq("id", p.registro.id)
+            .select("id");
+          if (error) throw error;
+          afetadas = (data ?? []).length;
+        } else {
+          const { data, error } = await sb.from("fin_pagamentos").insert(p.registro).select("id");
+          if (error) throw error;
+          afetadas = (data ?? []).length;
+        }
       }
       // RLS que bloqueia UPDATE/DELETE devolve sucesso com zero linhas — sem
       // esta checagem o usuário veria "desfeito" sem nada ter mudado.
@@ -321,7 +408,11 @@ function AuditPage() {
                     <TableCell className="max-w-md truncate text-sm" title={resumo(r)}>
                       {resumo(r) || "—"}
                     </TableCell>
-                    <TableCell className="text-right"><PayloadDialog payload={r.payload} /></TableCell>
+                    <TableCell className="text-right">
+                      <DetalheDialog registro={r} ator={
+                        r.actor_user_id ? (actors[r.actor_user_id] ?? r.actor_user_id) : "Sistema"
+                      } />
+                    </TableCell>
                     <TableCell className="text-right">
                       <BotaoDesfazer
                         registro={r}
@@ -376,9 +467,139 @@ function AuditPage() {
   );
 }
 
+/** Título humano da ação, para o cabeçalho do detalhe. */
+const TITULO_ACAO: Record<string, string> = {
+  pagamento_criado: "Pagamento criado",
+  pagamento_alterado: "Pagamento alterado",
+  pagamento_excluido: "Pagamento excluído",
+  rubrica_criado: "Rubrica criada",
+  rubrica_alterado: "Rubrica alterada",
+  rubrica_excluido: "Rubrica excluída",
+  usuario_convidado: "Usuário convidado",
+  usuario_removido: "Usuário removido",
+  usuario_senha_redefinida: "Senha redefinida",
+  usuario_acesso_reenviado: "Acesso reenviado",
+};
+
+/**
+ * Detalhe do registro em português.
+ *
+ * O JSON cru continua a um clique de distância: quando algo não bate, é nele
+ * que se confere. Mas ninguém deveria precisar ler chave de banco para
+ * entender que uma conta foi baixada.
+ */
+function DetalheDialog({ registro, ator }: { registro: Row; ator: string }) {
+  const [verJson, setVerJson] = useState(false);
+  const p = (registro.payload ?? {}) as PayloadAuditoria;
+  const mudancas = p.mudancas as Record<string, { de: unknown; para: unknown }> | undefined;
+  const reg = p.registro as Record<string, unknown> | undefined;
+
+  // Nos campos avulsos (ações de usuário) o que interessa não é id nem estrutura.
+  const avulsos = Object.entries(p).filter(
+    ([k]) => !["mudancas", "registro", "id", "ref"].includes(k),
+  );
+
+  return (
+    <Dialog onOpenChange={() => setVerJson(false)}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <Eye className="mr-1 h-4 w-4" />
+          Detalhes
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{TITULO_ACAO[registro.action] ?? registro.action}</DialogTitle>
+          <DialogDescription>
+            {p.ref ? <strong className="text-foreground">{String(p.ref)}</strong> : null}
+            {p.ref ? " · " : null}
+            por {ator} · {new Date(registro.created_at).toLocaleString("pt-BR")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="max-h-[60vh] overflow-y-auto">
+          {mudancas && (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-xs text-muted-foreground">
+                  <th className="py-1.5 text-left font-medium">Campo</th>
+                  <th className="py-1.5 text-left font-medium">Antes</th>
+                  <th className="py-1.5 text-left font-medium">Depois</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(mudancas).map(([campo, v]) => (
+                  <tr
+                    key={campo}
+                    className={`border-b last:border-0 ${
+                      CAMPOS_OCULTOS.has(campo) ? "text-muted-foreground/60" : ""
+                    }`}
+                  >
+                    <td className="py-2 pr-3 font-medium">{rotulo(campo)}</td>
+                    <td className="py-2 pr-3 line-through decoration-red-500/40">
+                      {valorLegivel(campo, v.de)}
+                    </td>
+                    <td className="py-2 font-medium text-emerald-700 dark:text-emerald-500">
+                      {valorLegivel(campo, v.para)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {reg && (
+            <dl className="grid grid-cols-[minmax(0,10rem)_1fr] gap-x-4 gap-y-2 text-sm">
+              {Object.entries(reg)
+                .filter(([k]) => k !== "id")
+                .map(([campo, v]) => (
+                  <div key={campo} className="contents">
+                    <dt className="text-muted-foreground">{rotulo(campo)}</dt>
+                    <dd className="font-medium">{valorLegivel(campo, v)}</dd>
+                  </div>
+                ))}
+            </dl>
+          )}
+
+          {!mudancas && !reg && avulsos.length > 0 && (
+            <dl className="grid grid-cols-[minmax(0,10rem)_1fr] gap-x-4 gap-y-2 text-sm">
+              {avulsos.map(([campo, v]) => (
+                <div key={campo} className="contents">
+                  <dt className="text-muted-foreground">{rotulo(campo)}</dt>
+                  <dd className="font-medium">{valorLegivel(campo, v)}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {!mudancas && !reg && avulsos.length === 0 && (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Este registro não guardou detalhes.
+            </p>
+          )}
+
+          {verJson && (
+            <pre className="mt-4 max-h-64 overflow-auto rounded-md bg-muted p-3 text-xs">
+              {JSON.stringify(registro.payload, null, 2)}
+            </pre>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setVerJson((v) => !v)}
+          className="self-start text-xs text-muted-foreground underline-offset-2 hover:underline"
+        >
+          {verJson ? "Ocultar dados técnicos" : "Ver dados técnicos (JSON)"}
+        </button>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /** O que o desfazer vai fazer, em português, para a confirmação. */
 function efeitoDoDesfazer(r: Row): string {
-  const p = r.payload as Record<string, any>;
+  const p = r.payload as PayloadAuditoria;
   if (r.action === "pagamento_criado") {
     return `O lançamento de ${p.registro?.fornecedor ?? "—"} será excluído.`;
   }
