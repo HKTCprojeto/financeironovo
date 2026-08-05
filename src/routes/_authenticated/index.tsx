@@ -18,7 +18,7 @@ import { LayoutDashboard, AlertTriangle, TableProperties } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { mesAtual, mesCurto } from "@/lib/financeiro";
+import { mesCurto } from "@/lib/financeiro";
 import {
   fetchPagamentos,
   GRUPO_CORES,
@@ -50,8 +50,10 @@ export const Route = createFileRoute("/_authenticated/")({
  */
 function PainelPagamentos() {
   const hoje = hojeISO();
-  // Abre no mês corrente; o filtro permite marcar mais meses ou limpar (= tudo).
-  const [meses, setMeses] = useState<string[]>([mesAtual()]);
+  // Abre SEM filtro, ao contrário das outras telas: aqui a leitura é a
+  // evolução, e o comparativo mês a mês perde o sentido com um mês só.
+  // Financeiro e Relatórios abrem no mês corrente porque tratam de execução.
+  const [meses, setMeses] = useState<string[]>([]);
   const { data, isLoading, error } = useQuery({
     queryKey: ["painel-pagamentos"],
     queryFn: fetchPagamentos,

@@ -9,58 +9,47 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as InstallRouteImport } from './routes/install'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as InstallRouteImport } from './routes/install'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
-import { Route as AuthenticatedObservabilityRouteImport } from './routes/_authenticated/observability'
-import { Route as AuthenticatedLlmUsageRouteImport } from './routes/_authenticated/llm-usage'
-import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
-import { Route as AuthenticatedFinanceiroDespesasRouteImport } from './routes/_authenticated/financeiro-despesas'
-import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
-import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
-import { Route as AuthenticatedComandoCentralRouteImport } from './routes/_authenticated/comando-central'
-import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
-import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
-import { Route as AuthenticatedIntegrationsIndexRouteImport } from './routes/_authenticated/integrations.index'
-import { Route as AuthenticatedInstancesIndexRouteImport } from './routes/_authenticated/instances.index'
+import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
+import { Route as AuthenticatedComandoCentralRouteImport } from './routes/_authenticated/comando-central'
+import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedFinanceiroDespesasRouteImport } from './routes/_authenticated/financeiro-despesas'
+import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
+import { Route as AuthenticatedLlmUsageRouteImport } from './routes/_authenticated/llm-usage'
+import { Route as AuthenticatedObservabilityRouteImport } from './routes/_authenticated/observability'
+import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
 import { Route as AuthenticatedAutomationsIndexRouteImport } from './routes/_authenticated/automations.index'
-import { Route as AuthenticatedSettingsWhatsappRouteImport } from './routes/_authenticated/settings_.whatsapp'
-import { Route as AuthenticatedSettingsSistemaRouteImport } from './routes/_authenticated/settings_.sistema'
-import { Route as AuthenticatedIntegrationsSupabaseRouteImport } from './routes/_authenticated/integrations.supabase'
-import { Route as AuthenticatedIntegrationsNuvemshopRouteImport } from './routes/_authenticated/integrations.nuvemshop'
-import { Route as AuthenticatedIntegrationsMercadoLivreRouteImport } from './routes/_authenticated/integrations.mercado-livre'
-import { Route as AuthenticatedIntegrationsHubspotRouteImport } from './routes/_authenticated/integrations.hubspot'
-import { Route as AuthenticatedIntegrationsContaazulRouteImport } from './routes/_authenticated/integrations.contaazul'
-import { Route as AuthenticatedIntegrationsBlingRouteImport } from './routes/_authenticated/integrations.bling'
-import { Route as AuthenticatedInstancesIdRouteImport } from './routes/_authenticated/instances.$id'
 import { Route as AuthenticatedAutomationsIdRouteImport } from './routes/_authenticated/automations.$id'
-import { Route as AuthenticatedIntegrationsNuvemshopCallbackRouteImport } from './routes/_authenticated/integrations.nuvemshop.callback'
-import { Route as AuthenticatedIntegrationsMercadoLivreCallbackRouteImport } from './routes/_authenticated/integrations.mercado-livre.callback'
-import { Route as AuthenticatedIntegrationsHubspotCallbackRouteImport } from './routes/_authenticated/integrations.hubspot.callback'
-import { Route as AuthenticatedIntegrationsContaazulCallbackRouteImport } from './routes/_authenticated/integrations.contaazul.callback'
+import { Route as AuthenticatedInstancesIndexRouteImport } from './routes/_authenticated/instances.index'
+import { Route as AuthenticatedInstancesIdRouteImport } from './routes/_authenticated/instances.$id'
+import { Route as AuthenticatedIntegrationsIndexRouteImport } from './routes/_authenticated/integrations.index'
+import { Route as AuthenticatedIntegrationsBlingRouteImport } from './routes/_authenticated/integrations.bling'
+import { Route as AuthenticatedIntegrationsContaazulRouteImport } from './routes/_authenticated/integrations.contaazul'
+import { Route as AuthenticatedIntegrationsHubspotRouteImport } from './routes/_authenticated/integrations.hubspot'
+import { Route as AuthenticatedIntegrationsMercadoLivreRouteImport } from './routes/_authenticated/integrations.mercado-livre'
+import { Route as AuthenticatedIntegrationsNuvemshopRouteImport } from './routes/_authenticated/integrations.nuvemshop'
+import { Route as AuthenticatedIntegrationsSupabaseRouteImport } from './routes/_authenticated/integrations.supabase'
+import { Route as AuthenticatedSettingsSistemaRouteImport } from './routes/_authenticated/settings_.sistema'
+import { Route as AuthenticatedSettingsWhatsappRouteImport } from './routes/_authenticated/settings_.whatsapp'
 import { Route as AuthenticatedIntegrationsBlingCallbackRouteImport } from './routes/_authenticated/integrations.bling.callback'
+import { Route as AuthenticatedIntegrationsContaazulCallbackRouteImport } from './routes/_authenticated/integrations.contaazul.callback'
+import { Route as AuthenticatedIntegrationsHubspotCallbackRouteImport } from './routes/_authenticated/integrations.hubspot.callback'
+import { Route as AuthenticatedIntegrationsMercadoLivreCallbackRouteImport } from './routes/_authenticated/integrations.mercado-livre.callback'
+import { Route as AuthenticatedIntegrationsNuvemshopCallbackRouteImport } from './routes/_authenticated/integrations.nuvemshop.callback'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstallRoute = InstallRouteImport.update({
@@ -68,8 +57,19 @@ const InstallRoute = InstallRouteImport.update({
   path: '/install',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -77,56 +77,19 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
-  id: '/usuarios',
-  path: '/usuarios',
+const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
-  id: '/pagamentos',
-  path: '/pagamentos',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedObservabilityRoute =
-  AuthenticatedObservabilityRouteImport.update({
-    id: '/observability',
-    path: '/observability',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedLlmUsageRoute = AuthenticatedLlmUsageRouteImport.update({
-  id: '/llm-usage',
-  path: '/llm-usage',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
-  id: '/goals',
-  path: '/goals',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedFinanceiroDespesasRoute =
-  AuthenticatedFinanceiroDespesasRouteImport.update({
-    id: '/financeiro-despesas',
-    path: '/financeiro-despesas',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEventsRoute = AuthenticatedEventsRouteImport.update({
-  id: '/events',
-  path: '/events',
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedComandoCentralRoute =
@@ -135,91 +98,62 @@ const AuthenticatedComandoCentralRoute =
     path: '/comando-central',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
+const AuthenticatedEventsRoute = AuthenticatedEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedIntegrationsIndexRoute =
-  AuthenticatedIntegrationsIndexRouteImport.update({
-    id: '/integrations/',
-    path: '/integrations/',
+const AuthenticatedFinanceiroDespesasRoute =
+  AuthenticatedFinanceiroDespesasRouteImport.update({
+    id: '/financeiro-despesas',
+    path: '/financeiro-despesas',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedInstancesIndexRoute =
-  AuthenticatedInstancesIndexRouteImport.update({
-    id: '/instances/',
-    path: '/instances/',
+const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedLlmUsageRoute = AuthenticatedLlmUsageRouteImport.update({
+  id: '/llm-usage',
+  path: '/llm-usage',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedObservabilityRoute =
+  AuthenticatedObservabilityRouteImport.update({
+    id: '/observability',
+    path: '/observability',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAutomationsIndexRoute =
   AuthenticatedAutomationsIndexRouteImport.update({
     id: '/automations/',
     path: '/automations/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedSettingsWhatsappRoute =
-  AuthenticatedSettingsWhatsappRouteImport.update({
-    id: '/settings_/whatsapp',
-    path: '/settings/whatsapp',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedSettingsSistemaRoute =
-  AuthenticatedSettingsSistemaRouteImport.update({
-    id: '/settings_/sistema',
-    path: '/settings/sistema',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedIntegrationsSupabaseRoute =
-  AuthenticatedIntegrationsSupabaseRouteImport.update({
-    id: '/integrations/supabase',
-    path: '/integrations/supabase',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedIntegrationsNuvemshopRoute =
-  AuthenticatedIntegrationsNuvemshopRouteImport.update({
-    id: '/integrations/nuvemshop',
-    path: '/integrations/nuvemshop',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedIntegrationsMercadoLivreRoute =
-  AuthenticatedIntegrationsMercadoLivreRouteImport.update({
-    id: '/integrations/mercado-livre',
-    path: '/integrations/mercado-livre',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedIntegrationsHubspotRoute =
-  AuthenticatedIntegrationsHubspotRouteImport.update({
-    id: '/integrations/hubspot',
-    path: '/integrations/hubspot',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedIntegrationsContaazulRoute =
-  AuthenticatedIntegrationsContaazulRouteImport.update({
-    id: '/integrations/contaazul',
-    path: '/integrations/contaazul',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedIntegrationsBlingRoute =
-  AuthenticatedIntegrationsBlingRouteImport.update({
-    id: '/integrations/bling',
-    path: '/integrations/bling',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedInstancesIdRoute =
-  AuthenticatedInstancesIdRouteImport.update({
-    id: '/instances/$id',
-    path: '/instances/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAutomationsIdRoute =
@@ -228,23 +162,77 @@ const AuthenticatedAutomationsIdRoute =
     path: '/automations/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedIntegrationsNuvemshopCallbackRoute =
-  AuthenticatedIntegrationsNuvemshopCallbackRouteImport.update({
-    id: '/callback',
-    path: '/callback',
-    getParentRoute: () => AuthenticatedIntegrationsNuvemshopRoute,
+const AuthenticatedInstancesIndexRoute =
+  AuthenticatedInstancesIndexRouteImport.update({
+    id: '/instances/',
+    path: '/instances/',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedIntegrationsMercadoLivreCallbackRoute =
-  AuthenticatedIntegrationsMercadoLivreCallbackRouteImport.update({
-    id: '/callback',
-    path: '/callback',
-    getParentRoute: () => AuthenticatedIntegrationsMercadoLivreRoute,
+const AuthenticatedInstancesIdRoute =
+  AuthenticatedInstancesIdRouteImport.update({
+    id: '/instances/$id',
+    path: '/instances/$id',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedIntegrationsHubspotCallbackRoute =
-  AuthenticatedIntegrationsHubspotCallbackRouteImport.update({
+const AuthenticatedIntegrationsIndexRoute =
+  AuthenticatedIntegrationsIndexRouteImport.update({
+    id: '/integrations/',
+    path: '/integrations/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIntegrationsBlingRoute =
+  AuthenticatedIntegrationsBlingRouteImport.update({
+    id: '/integrations/bling',
+    path: '/integrations/bling',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIntegrationsContaazulRoute =
+  AuthenticatedIntegrationsContaazulRouteImport.update({
+    id: '/integrations/contaazul',
+    path: '/integrations/contaazul',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIntegrationsHubspotRoute =
+  AuthenticatedIntegrationsHubspotRouteImport.update({
+    id: '/integrations/hubspot',
+    path: '/integrations/hubspot',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIntegrationsMercadoLivreRoute =
+  AuthenticatedIntegrationsMercadoLivreRouteImport.update({
+    id: '/integrations/mercado-livre',
+    path: '/integrations/mercado-livre',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIntegrationsNuvemshopRoute =
+  AuthenticatedIntegrationsNuvemshopRouteImport.update({
+    id: '/integrations/nuvemshop',
+    path: '/integrations/nuvemshop',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIntegrationsSupabaseRoute =
+  AuthenticatedIntegrationsSupabaseRouteImport.update({
+    id: '/integrations/supabase',
+    path: '/integrations/supabase',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsSistemaRoute =
+  AuthenticatedSettingsSistemaRouteImport.update({
+    id: '/settings_/sistema',
+    path: '/settings/sistema',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsWhatsappRoute =
+  AuthenticatedSettingsWhatsappRouteImport.update({
+    id: '/settings_/whatsapp',
+    path: '/settings/whatsapp',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIntegrationsBlingCallbackRoute =
+  AuthenticatedIntegrationsBlingCallbackRouteImport.update({
     id: '/callback',
     path: '/callback',
-    getParentRoute: () => AuthenticatedIntegrationsHubspotRoute,
+    getParentRoute: () => AuthenticatedIntegrationsBlingRoute,
   } as any)
 const AuthenticatedIntegrationsContaazulCallbackRoute =
   AuthenticatedIntegrationsContaazulCallbackRouteImport.update({
@@ -252,11 +240,23 @@ const AuthenticatedIntegrationsContaazulCallbackRoute =
     path: '/callback',
     getParentRoute: () => AuthenticatedIntegrationsContaazulRoute,
   } as any)
-const AuthenticatedIntegrationsBlingCallbackRoute =
-  AuthenticatedIntegrationsBlingCallbackRouteImport.update({
+const AuthenticatedIntegrationsHubspotCallbackRoute =
+  AuthenticatedIntegrationsHubspotCallbackRouteImport.update({
     id: '/callback',
     path: '/callback',
-    getParentRoute: () => AuthenticatedIntegrationsBlingRoute,
+    getParentRoute: () => AuthenticatedIntegrationsHubspotRoute,
+  } as any)
+const AuthenticatedIntegrationsMercadoLivreCallbackRoute =
+  AuthenticatedIntegrationsMercadoLivreCallbackRouteImport.update({
+    id: '/callback',
+    path: '/callback',
+    getParentRoute: () => AuthenticatedIntegrationsMercadoLivreRoute,
+  } as any)
+const AuthenticatedIntegrationsNuvemshopCallbackRoute =
+  AuthenticatedIntegrationsNuvemshopCallbackRouteImport.update({
+    id: '/callback',
+    path: '/callback',
+    getParentRoute: () => AuthenticatedIntegrationsNuvemshopRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -509,25 +509,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/install': {
@@ -537,11 +523,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InstallRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -551,88 +551,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/usuarios': {
-      id: '/_authenticated/usuarios'
-      path: '/usuarios'
-      fullPath: '/usuarios'
-      preLoaderRoute: typeof AuthenticatedUsuariosRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/pagamentos': {
-      id: '/_authenticated/pagamentos'
-      path: '/pagamentos'
-      fullPath: '/pagamentos'
-      preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/observability': {
-      id: '/_authenticated/observability'
-      path: '/observability'
-      fullPath: '/observability'
-      preLoaderRoute: typeof AuthenticatedObservabilityRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/llm-usage': {
-      id: '/_authenticated/llm-usage'
-      path: '/llm-usage'
-      fullPath: '/llm-usage'
-      preLoaderRoute: typeof AuthenticatedLlmUsageRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/goals': {
-      id: '/_authenticated/goals'
-      path: '/goals'
-      fullPath: '/goals'
-      preLoaderRoute: typeof AuthenticatedGoalsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/financeiro-despesas': {
-      id: '/_authenticated/financeiro-despesas'
-      path: '/financeiro-despesas'
-      fullPath: '/financeiro-despesas'
-      preLoaderRoute: typeof AuthenticatedFinanceiroDespesasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/financeiro': {
-      id: '/_authenticated/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/events': {
-      id: '/_authenticated/events'
-      path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof AuthenticatedEventsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/comando-central': {
-      id: '/_authenticated/comando-central'
-      path: '/comando-central'
-      fullPath: '/comando-central'
-      preLoaderRoute: typeof AuthenticatedComandoCentralRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/chat': {
-      id: '/_authenticated/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof AuthenticatedChatRouteImport
+    '/_authenticated/alerts': {
+      id: '/_authenticated/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AuthenticatedAlertsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/audit': {
@@ -642,25 +565,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAuditRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/alerts': {
-      id: '/_authenticated/alerts'
-      path: '/alerts'
-      fullPath: '/alerts'
-      preLoaderRoute: typeof AuthenticatedAlertsRouteImport
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/integrations/': {
-      id: '/_authenticated/integrations/'
-      path: '/integrations'
-      fullPath: '/integrations/'
-      preLoaderRoute: typeof AuthenticatedIntegrationsIndexRouteImport
+    '/_authenticated/comando-central': {
+      id: '/_authenticated/comando-central'
+      path: '/comando-central'
+      fullPath: '/comando-central'
+      preLoaderRoute: typeof AuthenticatedComandoCentralRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/instances/': {
-      id: '/_authenticated/instances/'
-      path: '/instances'
-      fullPath: '/instances/'
-      preLoaderRoute: typeof AuthenticatedInstancesIndexRouteImport
+    '/_authenticated/events': {
+      id: '/_authenticated/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof AuthenticatedEventsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/financeiro-despesas': {
+      id: '/_authenticated/financeiro-despesas'
+      path: '/financeiro-despesas'
+      fullPath: '/financeiro-despesas'
+      preLoaderRoute: typeof AuthenticatedFinanceiroDespesasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/goals': {
+      id: '/_authenticated/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof AuthenticatedGoalsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/llm-usage': {
+      id: '/_authenticated/llm-usage'
+      path: '/llm-usage'
+      fullPath: '/llm-usage'
+      preLoaderRoute: typeof AuthenticatedLlmUsageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/observability': {
+      id: '/_authenticated/observability'
+      path: '/observability'
+      fullPath: '/observability'
+      preLoaderRoute: typeof AuthenticatedObservabilityRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pagamentos': {
+      id: '/_authenticated/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/pagamentos'
+      preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/usuarios': {
+      id: '/_authenticated/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof AuthenticatedUsuariosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/automations/': {
@@ -670,60 +656,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAutomationsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/settings_/whatsapp': {
-      id: '/_authenticated/settings_/whatsapp'
-      path: '/settings/whatsapp'
-      fullPath: '/settings/whatsapp'
-      preLoaderRoute: typeof AuthenticatedSettingsWhatsappRouteImport
+    '/_authenticated/automations/$id': {
+      id: '/_authenticated/automations/$id'
+      path: '/automations/$id'
+      fullPath: '/automations/$id'
+      preLoaderRoute: typeof AuthenticatedAutomationsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/settings_/sistema': {
-      id: '/_authenticated/settings_/sistema'
-      path: '/settings/sistema'
-      fullPath: '/settings/sistema'
-      preLoaderRoute: typeof AuthenticatedSettingsSistemaRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/integrations/supabase': {
-      id: '/_authenticated/integrations/supabase'
-      path: '/integrations/supabase'
-      fullPath: '/integrations/supabase'
-      preLoaderRoute: typeof AuthenticatedIntegrationsSupabaseRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/integrations/nuvemshop': {
-      id: '/_authenticated/integrations/nuvemshop'
-      path: '/integrations/nuvemshop'
-      fullPath: '/integrations/nuvemshop'
-      preLoaderRoute: typeof AuthenticatedIntegrationsNuvemshopRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/integrations/mercado-livre': {
-      id: '/_authenticated/integrations/mercado-livre'
-      path: '/integrations/mercado-livre'
-      fullPath: '/integrations/mercado-livre'
-      preLoaderRoute: typeof AuthenticatedIntegrationsMercadoLivreRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/integrations/hubspot': {
-      id: '/_authenticated/integrations/hubspot'
-      path: '/integrations/hubspot'
-      fullPath: '/integrations/hubspot'
-      preLoaderRoute: typeof AuthenticatedIntegrationsHubspotRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/integrations/contaazul': {
-      id: '/_authenticated/integrations/contaazul'
-      path: '/integrations/contaazul'
-      fullPath: '/integrations/contaazul'
-      preLoaderRoute: typeof AuthenticatedIntegrationsContaazulRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/integrations/bling': {
-      id: '/_authenticated/integrations/bling'
-      path: '/integrations/bling'
-      fullPath: '/integrations/bling'
-      preLoaderRoute: typeof AuthenticatedIntegrationsBlingRouteImport
+    '/_authenticated/instances/': {
+      id: '/_authenticated/instances/'
+      path: '/instances'
+      fullPath: '/instances/'
+      preLoaderRoute: typeof AuthenticatedInstancesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/instances/$id': {
@@ -733,33 +677,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInstancesIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/automations/$id': {
-      id: '/_authenticated/automations/$id'
-      path: '/automations/$id'
-      fullPath: '/automations/$id'
-      preLoaderRoute: typeof AuthenticatedAutomationsIdRouteImport
+    '/_authenticated/integrations/': {
+      id: '/_authenticated/integrations/'
+      path: '/integrations'
+      fullPath: '/integrations/'
+      preLoaderRoute: typeof AuthenticatedIntegrationsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/integrations/nuvemshop/callback': {
-      id: '/_authenticated/integrations/nuvemshop/callback'
-      path: '/callback'
-      fullPath: '/integrations/nuvemshop/callback'
-      preLoaderRoute: typeof AuthenticatedIntegrationsNuvemshopCallbackRouteImport
-      parentRoute: typeof AuthenticatedIntegrationsNuvemshopRoute
+    '/_authenticated/integrations/bling': {
+      id: '/_authenticated/integrations/bling'
+      path: '/integrations/bling'
+      fullPath: '/integrations/bling'
+      preLoaderRoute: typeof AuthenticatedIntegrationsBlingRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/integrations/mercado-livre/callback': {
-      id: '/_authenticated/integrations/mercado-livre/callback'
-      path: '/callback'
-      fullPath: '/integrations/mercado-livre/callback'
-      preLoaderRoute: typeof AuthenticatedIntegrationsMercadoLivreCallbackRouteImport
-      parentRoute: typeof AuthenticatedIntegrationsMercadoLivreRoute
+    '/_authenticated/integrations/contaazul': {
+      id: '/_authenticated/integrations/contaazul'
+      path: '/integrations/contaazul'
+      fullPath: '/integrations/contaazul'
+      preLoaderRoute: typeof AuthenticatedIntegrationsContaazulRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/integrations/hubspot/callback': {
-      id: '/_authenticated/integrations/hubspot/callback'
+    '/_authenticated/integrations/hubspot': {
+      id: '/_authenticated/integrations/hubspot'
+      path: '/integrations/hubspot'
+      fullPath: '/integrations/hubspot'
+      preLoaderRoute: typeof AuthenticatedIntegrationsHubspotRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/integrations/mercado-livre': {
+      id: '/_authenticated/integrations/mercado-livre'
+      path: '/integrations/mercado-livre'
+      fullPath: '/integrations/mercado-livre'
+      preLoaderRoute: typeof AuthenticatedIntegrationsMercadoLivreRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/integrations/nuvemshop': {
+      id: '/_authenticated/integrations/nuvemshop'
+      path: '/integrations/nuvemshop'
+      fullPath: '/integrations/nuvemshop'
+      preLoaderRoute: typeof AuthenticatedIntegrationsNuvemshopRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/integrations/supabase': {
+      id: '/_authenticated/integrations/supabase'
+      path: '/integrations/supabase'
+      fullPath: '/integrations/supabase'
+      preLoaderRoute: typeof AuthenticatedIntegrationsSupabaseRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings_/sistema': {
+      id: '/_authenticated/settings_/sistema'
+      path: '/settings/sistema'
+      fullPath: '/settings/sistema'
+      preLoaderRoute: typeof AuthenticatedSettingsSistemaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings_/whatsapp': {
+      id: '/_authenticated/settings_/whatsapp'
+      path: '/settings/whatsapp'
+      fullPath: '/settings/whatsapp'
+      preLoaderRoute: typeof AuthenticatedSettingsWhatsappRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/integrations/bling/callback': {
+      id: '/_authenticated/integrations/bling/callback'
       path: '/callback'
-      fullPath: '/integrations/hubspot/callback'
-      preLoaderRoute: typeof AuthenticatedIntegrationsHubspotCallbackRouteImport
-      parentRoute: typeof AuthenticatedIntegrationsHubspotRoute
+      fullPath: '/integrations/bling/callback'
+      preLoaderRoute: typeof AuthenticatedIntegrationsBlingCallbackRouteImport
+      parentRoute: typeof AuthenticatedIntegrationsBlingRoute
     }
     '/_authenticated/integrations/contaazul/callback': {
       id: '/_authenticated/integrations/contaazul/callback'
@@ -768,12 +754,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIntegrationsContaazulCallbackRouteImport
       parentRoute: typeof AuthenticatedIntegrationsContaazulRoute
     }
-    '/_authenticated/integrations/bling/callback': {
-      id: '/_authenticated/integrations/bling/callback'
+    '/_authenticated/integrations/hubspot/callback': {
+      id: '/_authenticated/integrations/hubspot/callback'
       path: '/callback'
-      fullPath: '/integrations/bling/callback'
-      preLoaderRoute: typeof AuthenticatedIntegrationsBlingCallbackRouteImport
-      parentRoute: typeof AuthenticatedIntegrationsBlingRoute
+      fullPath: '/integrations/hubspot/callback'
+      preLoaderRoute: typeof AuthenticatedIntegrationsHubspotCallbackRouteImport
+      parentRoute: typeof AuthenticatedIntegrationsHubspotRoute
+    }
+    '/_authenticated/integrations/mercado-livre/callback': {
+      id: '/_authenticated/integrations/mercado-livre/callback'
+      path: '/callback'
+      fullPath: '/integrations/mercado-livre/callback'
+      preLoaderRoute: typeof AuthenticatedIntegrationsMercadoLivreCallbackRouteImport
+      parentRoute: typeof AuthenticatedIntegrationsMercadoLivreRoute
+    }
+    '/_authenticated/integrations/nuvemshop/callback': {
+      id: '/_authenticated/integrations/nuvemshop/callback'
+      path: '/callback'
+      fullPath: '/integrations/nuvemshop/callback'
+      preLoaderRoute: typeof AuthenticatedIntegrationsNuvemshopCallbackRouteImport
+      parentRoute: typeof AuthenticatedIntegrationsNuvemshopRoute
     }
   }
 }

@@ -44,15 +44,12 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { mensagemErroEdge } from "@/lib/edge-error";
 
+// O dia a dia: as quatro telas que respondem sobre o dinheiro.
 const mainItems = [
   { title: "Painel", url: "/", icon: LayoutDashboard, exact: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
   { title: "Pagamentos", url: "/pagamentos", icon: Receipt },
   { title: "Relatórios", url: "/reports", icon: BarChart3 },
-  { title: "Metas", url: "/goals", icon: Target },
-  { title: "Automações", url: "/automations", icon: Zap },
-  { title: "Alertas", url: "/alerts", icon: Bell },
-  { title: "Integrações", url: "/integrations", icon: Plug },
 ];
 
 // Canais = por onde se fala com a Lívia. O chat vem primeiro por ser o canal
@@ -67,14 +64,26 @@ const channelItems = [
   { title: "Telegram", url: "/settings/telegram", icon: Send, emBreve: true },
 ];
 
+// Configuração e bastidores. Metas, Automações, Alertas e Integrações vieram
+// do menu principal a pedido do Rodrigo: são coisas que se ajustam de vez em
+// quando, não que se consultam todo dia.
+//
+// Ordenado em tempo de execução, e não escrito já ordenado, para que item novo
+// entre no lugar certo sem depender de alguém lembrar. localeCompare pt-BR
+// porque a ordenação padrão joga acento para o fim ("Instâncias" iria parar
+// depois de "Usuários").
 const adminItems = [
-  { title: "Usuários", url: "/usuarios", icon: Users },
-  { title: "Instâncias", url: "/instances", icon: Server },
-  { title: "Observabilidade", url: "/observability", icon: Activity },
-  { title: "Eventos", url: "/events", icon: ScrollText },
-  { title: "Custo LLM", url: "/llm-usage", icon: Cpu },
+  { title: "Alertas", url: "/alerts", icon: Bell },
   { title: "Auditoria", url: "/audit", icon: ShieldCheck },
-];
+  { title: "Automações", url: "/automations", icon: Zap },
+  { title: "Custo LLM", url: "/llm-usage", icon: Cpu },
+  { title: "Eventos", url: "/events", icon: ScrollText },
+  { title: "Instâncias", url: "/instances", icon: Server },
+  { title: "Integrações", url: "/integrations", icon: Plug },
+  { title: "Metas", url: "/goals", icon: Target },
+  { title: "Observabilidade", url: "/observability", icon: Activity },
+  { title: "Usuários", url: "/usuarios", icon: Users },
+].sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
 
 const ADMIN_OPEN_KEY = "cfo:sidebar-admin-open";
 
