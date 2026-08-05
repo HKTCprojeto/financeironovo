@@ -50,6 +50,9 @@ type AdminUser = {
   email_confirmed_at: string | null;
   invited_at: string | null;
   is_admin: boolean;
+  // Existe no Auth E está na lista de autorizados. Uma conta com autorizado=false
+  // tem login mas foi criada por atalho (fora do convite) — não vê dado nenhum.
+  autorizado?: boolean;
 };
 
 // Chama a Edge Function admin-invite. O JWT do usuário vai junto
@@ -71,6 +74,11 @@ function UsuariosPage() {
     queryKey: ["admin-users"],
     queryFn: () => callAdmin<{ users: AdminUser[] }>({ action: "list" }),
     retry: false,
+    // Tela de gestão: sempre o estado real, sem cache. Exclusões/convites — mesmo
+    // feitos por fora (dashboard Supabase) — aparecem na hora ao abrir a tela ou
+    // voltar para a aba, em vez dos 5 min de cache padrão do app.
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const users = data?.users ?? [];
@@ -275,15 +283,26 @@ function UsuariosPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {pendente ? (
-                            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
-                              convite pendente
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
-                              ativo
-                            </Badge>
-                          )}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {pendente ? (
+                              <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                                convite pendente
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                                ativo
+                              </Badge>
+                            )}
+                            {u.autorizado === false && !u.is_admin && (
+                              <Badge
+                                variant="outline"
+                                className="border-red-200 bg-red-50 text-red-700"
+                                title="Conta existe no login mas não passou pelo convite — não vê nenhum dado. Remova se não reconhece."
+                              >
+                                <AlertTriangle className="mr-1 h-3 w-3" /> não autorizado
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                           {fmt(u.last_sign_in_at)}

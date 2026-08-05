@@ -105,15 +105,27 @@ Deno.serve(async (req: Request) => {
   if (action === "list") {
     const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
     if (error) return json({ error: error.message }, 400, cors);
-    const users = (data.users ?? []).map((u: any) => ({
-      id: u.id,
-      email: u.email,
-      created_at: u.created_at ?? null,
-      last_sign_in_at: u.last_sign_in_at ?? null,
-      email_confirmed_at: u.email_confirmed_at ?? u.confirmed_at ?? null,
-      invited_at: u.invited_at ?? null,
-      is_admin: (u.email ?? "").toLowerCase() === ADMIN_EMAIL,
-    }));
+    // Lista de e-mails autorizados. Acesso real exige estar aqui (RLS), não só
+    // ter conta no Auth — então uma conta SEM autorização é uma criada por
+    // atalho (painel Supabase/service_role) e aparece sinalizada na tela.
+    const { data: auts } = await admin.from("usuarios_autorizados").select("email");
+    const autorizados = new Set(
+      (auts ?? []).map((a: any) => String(a.email ?? "").toLowerCase()),
+    );
+    const users = (data.users ?? []).map((u: any) => {
+      const email = (u.email ?? "").toLowerCase();
+      const is_admin = email === ADMIN_EMAIL;
+      return {
+        id: u.id,
+        email: u.email,
+        created_at: u.created_at ?? null,
+        last_sign_in_at: u.last_sign_in_at ?? null,
+        email_confirmed_at: u.email_confirmed_at ?? u.confirmed_at ?? null,
+        invited_at: u.invited_at ?? null,
+        is_admin,
+        autorizado: is_admin || autorizados.has(email),
+      };
+    });
     // mais recentes primeiro
     users.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
     return json({ users }, 200, cors);
@@ -123,6 +135,20 @@ Deno.serve(async (req: Request) => {
   if (action === "invite") {
     const email = String(body.email ?? "").trim().toLowerCase();
     if (!isEmail(email)) return json({ error: "E-mail inválido." }, 400, cors);
+    // Autoriza o e-mail ANTES do envio: o acesso a dados (RLS) exige estar nesta
+    // lista, e não pode depender de o e-mail sair. Se ESTE passo falhar, aborta —
+    // senão o convite "daria certo" na tela mas a pessoa ficaria sem ver nada.
+    // (Erro de tabela ausente = a migration da lista ainda não foi aplicada.)
+    const { error: eAuth } = await admin
+      .from("usuarios_autorizados")
+      .upsert({ email, autorizado_por: callerId }, { onConflict: "email" });
+    if (eAuth) {
+      return json(
+        { error: `Não consegui autorizar o e-mail — a migration da lista de autorizados foi aplicada? Detalhe: ${eAuth.message}` },
+        500,
+        cors,
+      );
+    }
     // Envia o e-mail de convite AUTOMATICAMENTE (usa o SMTP configurado no
     // Supabase Auth — remetente "Agente CFO - Acesso" vem do Sender name do SMTP).
     const { error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
@@ -177,8 +203,12 @@ Deno.serve(async (req: Request) => {
     if (id === callerId) return json({ error: "Você não pode remover a própria conta." }, 400, cors);
     // Pega o e-mail antes de apagar — depois não há como saber quem era.
     const { data: alvo } = await admin.auth.admin.getUserById(id);
+    const alvoEmail = String(alvo?.user?.email ?? "").toLowerCase();
     const { error } = await admin.auth.admin.deleteUser(id);
     if (error) return json({ error: error.message }, 400, cors);
+    // Desautoriza também: sem a linha na lista, uma eventual conta remanescente
+    // com o mesmo e-mail não recupera acesso. O trigger audita a remoção.
+    if (alvoEmail) await admin.from("usuarios_autorizados").delete().eq("email", alvoEmail);
     await auditar("usuario_removido", { usuario_id: id, email: alvo?.user?.email ?? null });
     return json({ ok: true }, 200, cors);
   }

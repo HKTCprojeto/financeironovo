@@ -32,6 +32,18 @@ async function destinoSeNaoAutorizado(): Promise<"/login" | "/reset-password" | 
     await supabase.auth.signOut();
     return "/login";
   }
+  // Acesso exige DUAS coisas: conta válida (acima) E autorização explícita do
+  // admin (lista usuarios_autorizados, checada no banco por is_autorizado()).
+  // Uma conta criada por atalho (painel Supabase / service_role) loga mas não
+  // está na lista — é barrada aqui, e o RLS já a deixa sem ver nenhum dado.
+  const { data: autorizado, error: autErr } = await supabase.rpc("is_autorizado");
+  // Só barra em NEGATIVA explícita. Se a checagem em si falhar (rede, ou função
+  // ainda não deployada durante uma janela de deploy), não tranca ninguém — o
+  // RLS continua sendo a parede real, então falhar-aberto aqui é seguro.
+  if (!autErr && autorizado === false) {
+    await supabase.auth.signOut();
+    return "/login";
+  }
   // Acesso por convite: a pessoa é logada ao clicar no link, mas NÃO pode
   // ver o painel antes de definir a própria senha. A flag senha_definida
   // vira true em /reset-password. Sem ela (convidado novo), força o reset.
