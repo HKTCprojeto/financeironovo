@@ -1,177 +1,227 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Wallet,
   AlertTriangle,
-  ListTree,
-  Building2,
-  Layers,
+  Plus,
+  Pencil,
+  Trash2,
+  ShieldAlert,
+  Bell,
   ArrowRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { formatCents, formatReais, mesAtual } from "@/lib/financeiro";
-import { FiltroMeses } from "@/components/pagamentos-ui";
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader,
+  DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { formatCents, mesAtual, mesCurto, parseBRLToCents } from "@/lib/financeiro";
+import { ehAdmin } from "@/lib/admin";
+import { fetchPagamentos, hojeISO, statusEfetivo } from "@/lib/pagamentos-dados";
+import { FiltroMeses, Kpi } from "@/components/pagamentos-ui";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — HKTC" }] }),
   component: FinanceiroPage,
 });
 
-// ---------- tipos ----------
-type Rubrica = {
-  codigo: string;
-  nome: string;
-  nivel1_nome: string;
-  nivel2_nome: string;
-};
+type Escopo = "total" | "departamento" | "grupo" | "rubrica";
 
-type Pagamento = {
+type Orcamento = {
   id: string;
-  departamento: string | null;
-  fornecedor: string;
-  valor_centavos: number;
-  data_vencimento: string;
-  tipo: "fixo" | "variavel" | "imposto";
-  status: "previsto" | "a_pagar" | "pago" | "atrasado";
-  rubrica_codigo: string;
-  mes_ref: string;
+  escopo: Escopo;
+  alvo: string | null;
+  limite_centavos: number;
+  modo: "aviso" | "bloqueio";
+  alerta_pct: number;
+  mes_ref: string | null;
+  ativo: boolean;
+  observacao: string | null;
 };
 
-async function fetchFinanceiro() {
+const ESCOPO_LABEL: Record<Escopo, string> = {
+  total: "Total da empresa",
+  departamento: "Departamento",
+  grupo: "Grupo de rubrica",
+  rubrica: "Rubrica",
+};
+
+async function fetchOrcamentos(): Promise<Orcamento[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sb = supabase as any;
-  const [rub, pag] = await Promise.all([
-    sb.from("fin_rubricas").select("codigo,nome,nivel1_nome,nivel2_nome"),
-    sb.from("fin_pagamentos").select("*"),
-  ]);
-  if (rub.error) throw rub.error;
-  if (pag.error) throw pag.error;
-  return {
-    rubricas: (rub.data ?? []) as Rubrica[],
-    pagamentos: (pag.data ?? []) as Pagamento[],
-  };
+  const { data, error } = await sb.from("fin_orcamentos").select("*").order("escopo");
+  if (error) throw error;
+  return (data ?? []) as Orcamento[];
 }
-
-function hojeISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function statusEfetivo(p: Pagamento, hoje: string): "a_pagar" | "pago" | "atrasado" {
-  if (p.status === "pago") return "pago";
-  if (p.status === "atrasado") return "atrasado";
-  if (p.data_vencimento < hoje) return "atrasado";
-  return "a_pagar";
-}
-
-type Linha = { nome: string; sub?: string; count: number; cents: number };
 
 function FinanceiroPage() {
   const hoje = hojeISO();
-  // Lista vazia = todos os meses; mesmo critério do Painel e dos Relatórios.
+  const qc = useQueryClient();
   const [meses, setMeses] = useState<string[]>([mesAtual()]);
-  const [buscaRub, setBuscaRub] = useState("");
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["financeiro-pag"],
-    queryFn: fetchFinanceiro,
-  });
+  const [editando, setEditando] = useState<Orcamento | null>(null);
+  const [criando, setCriando] = useState(false);
 
-  const rubricas = data?.rubricas ?? [];
-  const pagamentos = data?.pagamentos ?? [];
+  const pagQ = useQuery({ queryKey: ["painel-pagamentos"], queryFn: fetchPagamentos });
+  const orcQ = useQuery({ queryKey: ["fin-orcamentos"], queryFn: fetchOrcamentos });
 
-  const rubIndex = useMemo(() => {
-    const m = new Map<string, Rubrica>();
-    rubricas.forEach((r) => m.set(r.codigo, r));
+  // Só esconde os botões — quem barra de verdade é a RLS (policy fin_orcamentos_admin).
+  const [souAdmin, setSouAdmin] = useState(false);
+  useEffect(() => {
+    let vivo = true;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (vivo) setSouAdmin(ehAdmin(data.user?.email));
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  const rubricas = useMemo(() => pagQ.data?.rubricas ?? [], [pagQ.data]);
+  const pagamentos = useMemo(() => pagQ.data?.pagamentos ?? [], [pagQ.data]);
+  const orcamentos = useMemo(() => orcQ.data ?? [], [orcQ.data]);
+
+  const grupoDaRubrica = useMemo(() => {
+    const m = new Map<string, string>();
+    rubricas.forEach((r) => m.set(r.codigo, r.nivel1_nome || "Sem grupo"));
     return m;
   }, [rubricas]);
 
-  const mesesComDados = useMemo(
-    () =>
-      Array.from(new Set(pagamentos.map((p) => p.mes_ref)))
-        .filter(Boolean)
-        .sort()
-        .reverse(),
+  const mesesDisponiveis = useMemo(
+    () => Array.from(new Set(pagamentos.map((p) => p.mes_ref))).filter(Boolean).sort().reverse(),
     [pagamentos],
   );
 
-  const doMes = useMemo(
-    () => (meses.length === 0 ? pagamentos : pagamentos.filter((p) => meses.includes(p.mes_ref))),
-    [pagamentos, meses],
+  // Meses efetivamente em análise. Filtro vazio = todos os que existem na base.
+  const mesesAtivos = useMemo(
+    () => (meses.length === 0 ? mesesDisponiveis : meses),
+    [meses, mesesDisponiveis],
   );
 
-  const ag = useMemo(() => {
-    let total = 0,
-      fixo = 0,
-      variavel = 0,
-      imposto = 0,
-      pago = 0,
-      pendente = 0;
-    const grupo = new Map<string, Linha>();
-    const rubrica = new Map<string, Linha>();
-    const depto = new Map<string, Linha>();
+  const doPeriodo = useMemo(
+    () => pagamentos.filter((p) => mesesAtivos.includes(p.mes_ref)),
+    [pagamentos, mesesAtivos],
+  );
 
-    const bump = (m: Map<string, Linha>, key: string, cents: number, sub?: string) => {
-      const cur = m.get(key) ?? { nome: key, sub, count: 0, cents: 0 };
-      cur.count += 1;
-      cur.cents += cents;
-      m.set(key, cur);
+  /**
+   * Quanto cada teto já consumiu, e de quanto ele é no período.
+   *
+   * O teto é MENSAL. Com vários meses selecionados, somar o realizado dos três
+   * contra um teto de um mês daria estouro falso — então o teto de cada mês é
+   * resolvido individualmente (o do mês específico ganha do recorrente) e só
+   * depois somado.
+   */
+  const linhas = useMemo(() => {
+    const casa = (o: Orcamento, p: (typeof doPeriodo)[number]) => {
+      if (o.escopo === "total") return true;
+      if (o.escopo === "departamento") return (p.departamento || null) === o.alvo;
+      if (o.escopo === "grupo") return grupoDaRubrica.get(p.rubrica_codigo) === o.alvo;
+      return p.rubrica_codigo === o.alvo;
     };
 
-    for (const p of doMes) {
-      total += p.valor_centavos;
-      if (p.tipo === "imposto") imposto += p.valor_centavos;
-      else if (p.tipo === "fixo") fixo += p.valor_centavos;
-      else variavel += p.valor_centavos;
-      const ef = statusEfetivo(p, hoje);
-      if (ef === "pago") pago += p.valor_centavos;
-      else pendente += p.valor_centavos;
-
-      const r = rubIndex.get(p.rubrica_codigo);
-      bump(grupo, r?.nivel1_nome || "Sem grupo", p.valor_centavos);
-      bump(
-        rubrica,
-        r?.nome || p.rubrica_codigo,
-        p.valor_centavos,
-        r?.nivel1_nome || p.rubrica_codigo,
-      );
-      bump(depto, p.departamento || "—", p.valor_centavos);
+    // por escopo+alvo, guarda o recorrente e os específicos por mês
+    const porChave = new Map<string, { recorrente?: Orcamento; porMes: Map<string, Orcamento> }>();
+    for (const o of orcamentos) {
+      if (!o.ativo) continue;
+      const k = `${o.escopo}|${o.alvo ?? ""}`;
+      const e = porChave.get(k) ?? { porMes: new Map<string, Orcamento>() };
+      if (o.mes_ref) e.porMes.set(o.mes_ref, o);
+      else e.recorrente = o;
+      porChave.set(k, e);
     }
 
-    const arr = (m: Map<string, Linha>) => Array.from(m.values()).sort((a, b) => b.cents - a.cents);
-    return {
-      total,
-      fixo,
-      variavel,
-      imposto,
-      pago,
-      pendente,
-      porGrupo: arr(grupo),
-      porRubrica: arr(rubrica),
-      porDepto: arr(depto),
-    };
-  }, [doMes, rubIndex, hoje]);
+    const saida: Array<{
+      chave: string;
+      referencia: Orcamento;
+      tetoPeriodo: number;
+      gasto: number;
+      pct: number;
+      mesesComTeto: number;
+    }> = [];
 
-  const rubFiltradas = useMemo(() => {
-    const q = buscaRub.trim().toLowerCase();
-    if (!q) return ag.porRubrica;
-    return ag.porRubrica.filter(
-      (l) => l.nome.toLowerCase().includes(q) || (l.sub ?? "").toLowerCase().includes(q),
+    for (const [chave, e] of porChave) {
+      let tetoPeriodo = 0;
+      let mesesComTeto = 0;
+      let referencia: Orcamento | undefined;
+      for (const m of mesesAtivos) {
+        const o = e.porMes.get(m) ?? e.recorrente;
+        if (!o) continue;
+        tetoPeriodo += o.limite_centavos;
+        mesesComTeto += 1;
+        referencia = referencia ?? o;
+      }
+      if (!referencia) continue;
+      const gasto = doPeriodo.filter((p) => casa(referencia, p))
+        .reduce((s, p) => s + p.valor_centavos, 0);
+      saida.push({
+        chave,
+        referencia,
+        tetoPeriodo,
+        gasto,
+        pct: tetoPeriodo > 0 ? Math.round((gasto / tetoPeriodo) * 100) : 0,
+        mesesComTeto,
+      });
+    }
+
+    // pior situação primeiro: é o que precisa de decisão
+    return saida.sort((a, b) => b.pct - a.pct);
+  }, [orcamentos, doPeriodo, grupoDaRubrica, mesesAtivos]);
+
+  const estourados = linhas.filter((l) => l.gasto > l.tetoPeriodo);
+  const emAlerta = linhas.filter(
+    (l) => l.gasto <= l.tetoPeriodo && l.pct >= l.referencia.alerta_pct,
+  );
+
+  // Departamentos com gasto e sem teto — o que ainda não está sob controle.
+  const semTeto = useMemo(() => {
+    const comTeto = new Set(
+      orcamentos.filter((o) => o.escopo === "departamento" && o.ativo).map((o) => o.alvo),
     );
-  }, [ag.porRubrica, buscaRub]);
+    const m = new Map<string, number>();
+    for (const p of doPeriodo) {
+      const d = p.departamento || "—";
+      if (comTeto.has(d)) continue;
+      m.set(d, (m.get(d) ?? 0) + p.valor_centavos);
+    }
+    return Array.from(m, ([nome, cents]) => ({ nome, cents })).sort((a, b) => b.cents - a.cents);
+  }, [orcamentos, doPeriodo]);
 
-  if (error) {
+  const totalPeriodo = doPeriodo.reduce((s, p) => s + p.valor_centavos, 0);
+  const pendente = doPeriodo
+    .filter((p) => statusEfetivo(p, hoje) !== "pago")
+    .reduce((s, p) => s + p.valor_centavos, 0);
+
+  const alvosPossiveis = useMemo(
+    () => ({
+      departamento: Array.from(new Set(pagamentos.map((p) => p.departamento || "—"))).sort(),
+      grupo: Array.from(new Set(rubricas.map((r) => r.nivel1_nome || "Sem grupo"))).sort(),
+      rubrica: rubricas.map((r) => ({ codigo: r.codigo, nome: r.nome })).sort((a, b) =>
+        a.nome.localeCompare(b.nome, "pt-BR"),
+      ),
+    }),
+    [pagamentos, rubricas],
+  );
+
+  const recarregar = () => qc.invalidateQueries({ queryKey: ["fin-orcamentos"] });
+
+  if (pagQ.error || orcQ.error) {
+    const e = (pagQ.error ?? orcQ.error) as Error;
     return (
       <div className="mx-auto max-w-2xl">
         <Card>
@@ -180,9 +230,7 @@ function FinanceiroPage() {
               <AlertTriangle className="h-5 w-5" /> Erro ao carregar o Financeiro
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            <p>{(error as Error).message}</p>
-          </CardContent>
+          <CardContent className="text-sm text-muted-foreground">{e.message}</CardContent>
         </Card>
       </div>
     );
@@ -190,208 +238,480 @@ function FinanceiroPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* cabeçalho + navegação de mês */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Wallet className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold tracking-tight">Financeiro</h1>
-          <span className="text-sm text-muted-foreground">· para onde vai o dinheiro</span>
+          <span className="text-sm text-muted-foreground">· orçamento e travas</span>
         </div>
-        <FiltroMeses meses={mesesComDados} selecionados={meses} onMudar={setMeses} />
+        <div className="flex items-center gap-2">
+          <FiltroMeses meses={mesesDisponiveis} selecionados={meses} onMudar={setMeses} />
+          {souAdmin && (
+            <Button onClick={() => setCriando(true)} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Novo teto
+            </Button>
+          )}
+        </div>
       </div>
 
-      {isLoading ? (
+      {pagQ.isLoading || orcQ.isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
-      ) : doMes.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            <p>Nenhum pagamento nos meses selecionados.</p>
-            {meses.length > 0 && (
-              <Button variant="outline" size="sm" className="mt-3" onClick={() => setMeses([])}>
-                Ver todos os meses
-              </Button>
-            )}
-          </CardContent>
-        </Card>
       ) : (
         <>
-          {/* KPIs */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <Kpi titulo="Total do período" cents={ag.total} sub={`${doMes.length} lançamentos`} />
-            <Kpi titulo="Fixos" cents={ag.fixo} sub={pct(ag.fixo, ag.total)} />
-            <Kpi titulo="Variáveis" cents={ag.variavel} sub={pct(ag.variavel, ag.total)} />
-            <Kpi titulo="Impostos" cents={ag.imposto} sub={pct(ag.imposto, ag.total)} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Kpi titulo="Realizado no período" cents={totalPeriodo} sub={`${doPeriodo.length} lançamentos`} />
+            <Kpi titulo="Ainda em aberto" cents={pendente} tone="amber" />
             <Kpi
-              titulo="Pendente"
-              cents={ag.pendente}
-              sub={`${pct(ag.pendente, ag.total)} em aberto`}
-              tone="amber"
+              titulo="Tetos definidos"
+              cents={linhas.reduce((s, l) => s + l.tetoPeriodo, 0)}
+              sub={`${linhas.length} orçamento(s)`}
+            />
+            <Kpi
+              titulo="Estouros"
+              cents={estourados.reduce((s, l) => s + (l.gasto - l.tetoPeriodo), 0)}
+              tone={estourados.length ? "red" : undefined}
+              sub={`${estourados.length} acima do teto`}
             />
           </div>
 
-          <Tabs defaultValue="grupo">
-            <TabsList>
-              <TabsTrigger value="grupo">
-                <Layers className="mr-1 h-3.5 w-3.5" /> Por grupo
-              </TabsTrigger>
-              <TabsTrigger value="rubrica">
-                <ListTree className="mr-1 h-3.5 w-3.5" /> Por rubrica
-              </TabsTrigger>
-              <TabsTrigger value="depto">
-                <Building2 className="mr-1 h-3.5 w-3.5" /> Por departamento
-              </TabsTrigger>
-            </TabsList>
+          {linhas.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <ShieldAlert className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+                <p className="font-medium">Nenhum teto definido ainda</p>
+                <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+                  Sem orçamento, o sistema mostra quanto foi gasto mas não diz se está dentro do
+                  combinado. Defina um teto por departamento ou para o total da empresa.
+                </p>
+                {souAdmin ? (
+                  <Button className="mt-4 gap-1.5" onClick={() => setCriando(true)}>
+                    <Plus className="h-4 w-4" /> Criar o primeiro
+                  </Button>
+                ) : (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Só o administrador define tetos.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {linhas.map((l) => (
+                <LinhaOrcamento
+                  key={l.chave}
+                  linha={l}
+                  souAdmin={souAdmin}
+                  qtdMeses={mesesAtivos.length}
+                  onEditar={() => setEditando(l.referencia)}
+                  onExcluido={recarregar}
+                />
+              ))}
+            </div>
+          )}
 
-            {/* Por grupo (rubrica nível 1) */}
-            <TabsContent value="grupo">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Por grupo de rubrica (nível 1)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Breakdown linhas={ag.porGrupo} total={ag.total} colNome="Grupo" />
-                </CardContent>
-              </Card>
-            </TabsContent>
+          {(estourados.length > 0 || emAlerta.length > 0) && (
+            <Card className={estourados.length ? "border-red-500/40" : "border-amber-500/40"}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Bell className="h-4 w-4" /> Precisa de atenção
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1.5 text-sm">
+                {estourados.map((l) => (
+                  <p key={l.chave}>
+                    <strong>{l.referencia.alvo ?? "Total da empresa"}</strong> estourou em{" "}
+                    <strong className="text-red-600">
+                      {formatCents(l.gasto - l.tetoPeriodo)}
+                    </strong>
+                    {l.referencia.modo === "bloqueio" && " — novos lançamentos estão bloqueados"}
+                  </p>
+                ))}
+                {emAlerta.map((l) => (
+                  <p key={l.chave} className="text-muted-foreground">
+                    {l.referencia.alvo ?? "Total da empresa"} já consumiu {l.pct}% do teto
+                  </p>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Por rubrica (detalhado) */}
-            <TabsContent value="rubrica">
-              <Card>
-                <CardHeader className="gap-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <CardTitle className="text-base">Por rubrica</CardTitle>
-                    <Input
-                      value={buscaRub}
-                      onChange={(e) => setBuscaRub(e.target.value)}
-                      placeholder="Buscar rubrica ou grupo…"
-                      className="w-[240px]"
-                    />
+          {semTeto.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Departamentos sem teto</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+                {semTeto.map((d) => (
+                  <div key={d.nome} className="flex items-center justify-between border-b py-1.5">
+                    <span>{d.nome}</span>
+                    <span className="font-mono tabular-nums text-muted-foreground">
+                      {formatCents(d.cents)}
+                    </span>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <Breakdown linhas={rubFiltradas} total={ag.total} colNome="Rubrica" showSub />
-                </CardContent>
-              </Card>
-            </TabsContent>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Por departamento */}
-            <TabsContent value="depto">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Por departamento</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Breakdown linhas={ag.porDepto} total={ag.total} colNome="Departamento" />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-
-          <p className="text-xs text-muted-foreground">
-            Dados do plano de pagamentos.{" "}
-            <Link
-              to="/pagamentos"
-              className="inline-flex items-center gap-1 text-primary hover:underline"
-            >
-              Ver / editar lançamentos em Pagamentos <ArrowRight className="h-3 w-3" />
+          <div className="flex flex-wrap items-center justify-center gap-2 pb-2 text-sm text-muted-foreground">
+            <span>Detalhamento por rubrica e fornecedor está em</span>
+            <Link to="/reports" className="font-medium text-primary hover:underline">
+              Relatórios <ArrowRight className="inline h-3 w-3" />
             </Link>
-          </p>
+          </div>
         </>
+      )}
+
+      {(criando || editando) && (
+        <FormOrcamento
+          orcamento={editando}
+          alvos={alvosPossiveis}
+          mesesDisponiveis={mesesDisponiveis}
+          onFechar={() => {
+            setCriando(false);
+            setEditando(null);
+          }}
+          onSalvo={() => {
+            setCriando(false);
+            setEditando(null);
+            recarregar();
+          }}
+        />
       )}
     </div>
   );
 }
 
-// ---------- auxiliares ----------
-function pct(parte: number, total: number): string {
-  if (total <= 0) return "0%";
-  return `${Math.round((parte / total) * 100)}%`;
-}
-
-function Kpi({
-  titulo,
-  cents,
-  sub,
-  tone,
+function LinhaOrcamento({
+  linha,
+  souAdmin,
+  qtdMeses,
+  onEditar,
+  onExcluido,
 }: {
-  titulo: string;
-  cents: number;
-  sub?: string;
-  tone?: "amber";
+  linha: {
+    chave: string;
+    referencia: Orcamento;
+    tetoPeriodo: number;
+    gasto: number;
+    pct: number;
+    mesesComTeto: number;
+  };
+  souAdmin: boolean;
+  qtdMeses: number;
+  onEditar: () => void;
+  onExcluido: () => void;
 }) {
+  const { referencia: o, tetoPeriodo, gasto, pct } = linha;
+  const estourou = gasto > tetoPeriodo;
+  const alertando = !estourou && pct >= o.alerta_pct;
+  const cor = estourou ? "text-red-600" : alertando ? "text-amber-600" : "text-emerald-600";
+
+  const excluir = async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const { data, error } = await sb.from("fin_orcamentos").delete().eq("id", o.id).select("id");
+    if (error) {
+      toast.error("Não foi possível excluir", { description: error.message });
+      return;
+    }
+    if (!(data ?? []).length) {
+      toast.error("Nada foi excluído", { description: "Só o administrador pode remover tetos." });
+      return;
+    }
+    toast.success("Teto removido");
+    onExcluido();
+  };
+
   return (
-    <Card>
+    <Card className={estourou ? "border-red-500/40" : ""}>
       <CardContent className="pt-5">
-        <div className="text-sm text-muted-foreground">{titulo}</div>
-        <div
-          className={`mt-1 flex items-baseline gap-1 whitespace-nowrap font-mono font-bold ${tone === "amber" ? "text-amber-600" : ""}`}
-        >
-          <span className="text-xs font-normal text-muted-foreground">R$</span>
-          <span className="text-lg">{formatReais(cents)}</span>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-medium">{o.alvo ?? "Total da empresa"}</span>
+              <Badge variant="outline" className="font-normal">{ESCOPO_LABEL[o.escopo]}</Badge>
+              {o.modo === "bloqueio" ? (
+                <Badge variant="destructive" className="gap-1 font-normal">
+                  <ShieldAlert className="h-3 w-3" /> Bloqueia
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="gap-1 font-normal">
+                  <Bell className="h-3 w-3" /> Avisa
+                </Badge>
+              )}
+              {o.mes_ref && (
+                <Badge variant="outline" className="font-normal">só {mesCurto(o.mes_ref)}</Badge>
+              )}
+            </div>
+            {o.observacao && (
+              <p className="mt-1 text-xs text-muted-foreground">{o.observacao}</p>
+            )}
+          </div>
+          {souAdmin && (
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={onEditar} title="Editar">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" title="Remover">
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remover este teto?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {o.alvo ?? "O total da empresa"} deixa de ter limite
+                      {o.modo === "bloqueio" && " e os lançamentos param de ser bloqueados"}.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={excluir}>Remover</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </div>
-        {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
+
+        <div className="mt-3">
+          <Progress value={Math.min(100, pct)} className="h-2" />
+          <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-2 text-sm">
+            <span className={`font-mono font-semibold ${cor}`}>
+              {formatCents(gasto)} <span className="font-normal text-muted-foreground">de</span>{" "}
+              {formatCents(tetoPeriodo)}
+            </span>
+            <span className={`text-xs ${cor}`}>
+              {pct}%
+              {estourou && ` · estourou em ${formatCents(gasto - tetoPeriodo)}`}
+              {alertando && ` · alerta a partir de ${o.alerta_pct}%`}
+            </span>
+          </div>
+          {qtdMeses > 1 && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Teto mensal somado em {linha.mesesComTeto} mês(es) do período.
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function Breakdown({
-  linhas,
-  total,
-  colNome,
-  showSub = false,
+function FormOrcamento({
+  orcamento,
+  alvos,
+  mesesDisponiveis,
+  onFechar,
+  onSalvo,
 }: {
-  linhas: Linha[];
-  total: number;
-  colNome: string;
-  showSub?: boolean;
+  orcamento: Orcamento | null;
+  alvos: {
+    departamento: string[];
+    grupo: string[];
+    rubrica: Array<{ codigo: string; nome: string }>;
+  };
+  mesesDisponiveis: string[];
+  onFechar: () => void;
+  onSalvo: () => void;
 }) {
-  if (linhas.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nada encontrado.</p>;
-  }
+  const [escopo, setEscopo] = useState<Escopo>(orcamento?.escopo ?? "departamento");
+  const [alvo, setAlvo] = useState<string>(orcamento?.alvo ?? "");
+  const [limite, setLimite] = useState(
+    orcamento ? (orcamento.limite_centavos / 100).toFixed(2).replace(".", ",") : "",
+  );
+  const [modo, setModo] = useState<"aviso" | "bloqueio">(orcamento?.modo ?? "aviso");
+  const [alertaPct, setAlertaPct] = useState(String(orcamento?.alerta_pct ?? 80));
+  const [mesRef, setMesRef] = useState<string>(orcamento?.mes_ref ?? "recorrente");
+  const [observacao, setObservacao] = useState(orcamento?.observacao ?? "");
+  const [salvando, setSalvando] = useState(false);
+
+  const salvar = async () => {
+    const cents = parseBRLToCents(limite);
+    if (!cents || cents <= 0) {
+      toast.error("Informe um valor de teto");
+      return;
+    }
+    if (escopo !== "total" && !alvo) {
+      toast.error("Escolha o alvo do teto");
+      return;
+    }
+    const pct = Number(alertaPct);
+    if (!Number.isFinite(pct) || pct < 1 || pct > 100) {
+      toast.error("O alerta deve ficar entre 1% e 100%");
+      return;
+    }
+
+    setSalvando(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const registro = {
+      escopo,
+      alvo: escopo === "total" ? null : alvo,
+      limite_centavos: cents,
+      modo,
+      alerta_pct: pct,
+      mes_ref: mesRef === "recorrente" ? null : mesRef,
+      observacao: observacao.trim() || null,
+      ativo: true,
+    };
+    const q = orcamento
+      ? sb.from("fin_orcamentos").update(registro).eq("id", orcamento.id).select("id")
+      : sb.from("fin_orcamentos").insert(registro).select("id");
+    const { data, error } = await q;
+    setSalvando(false);
+
+    if (error) {
+      const dup = /duplicate|unique/i.test(error.message);
+      toast.error(dup ? "Já existe um teto para esse alvo e mês" : "Não foi possível salvar", {
+        description: dup ? undefined : error.message,
+      });
+      return;
+    }
+    if (!(data ?? []).length) {
+      toast.error("Nada foi salvo", { description: "Só o administrador define tetos." });
+      return;
+    }
+    toast.success(orcamento ? "Teto atualizado" : "Teto criado");
+    onSalvo();
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{colNome}</TableHead>
-            <TableHead className="text-right">Lançs.</TableHead>
-            <TableHead className="text-right">Valor</TableHead>
-            <TableHead className="w-[200px]">% do mês</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {linhas.map((l) => {
-            const p = total > 0 ? (l.cents / total) * 100 : 0;
-            return (
-              <TableRow key={l.nome}>
-                <TableCell className="font-medium">
-                  {l.nome}
-                  {showSub && l.sub && (
-                    <span className="block text-[11px] text-muted-foreground">{l.sub}</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-muted-foreground">
-                  {l.count}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-right font-mono">
-                  {formatCents(l.cents)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-primary" style={{ width: `${p}%` }} />
-                    </div>
-                    <span className="w-9 text-right text-xs tabular-nums text-muted-foreground">
-                      {p.toFixed(0)}%
-                    </span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+    <Dialog open onOpenChange={(o) => !o && onFechar()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{orcamento ? "Editar teto" : "Novo teto"}</DialogTitle>
+          <DialogDescription>
+            O teto vale por mês. Em modo bloqueio, lançamentos que ultrapassem o limite são
+            recusados na hora de salvar.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Aplicar em</Label>
+              <Select
+                value={escopo}
+                onValueChange={(v) => {
+                  setEscopo(v as Escopo);
+                  setAlvo("");
+                }}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="total">Total da empresa</SelectItem>
+                  <SelectItem value="departamento">Departamento</SelectItem>
+                  <SelectItem value="grupo">Grupo de rubrica</SelectItem>
+                  <SelectItem value="rubrica">Rubrica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {escopo !== "total" && (
+              <div className="space-y-1.5">
+                <Label>Qual</Label>
+                <Select value={alvo} onValueChange={setAlvo}>
+                  <SelectTrigger><SelectValue placeholder="Escolher…" /></SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {escopo === "departamento" &&
+                      alvos.departamento.map((d) => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      ))}
+                    {escopo === "grupo" &&
+                      alvos.grupo.map((g) => (
+                        <SelectItem key={g} value={g}>{g}</SelectItem>
+                      ))}
+                    {escopo === "rubrica" &&
+                      alvos.rubrica.map((r) => (
+                        <SelectItem key={r.codigo} value={r.codigo}>{r.nome}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Teto mensal (R$)</Label>
+              <Input
+                inputMode="decimal"
+                placeholder="0,00"
+                value={limite}
+                onChange={(e) => setLimite(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Vale para</Label>
+              <Select value={mesRef} onValueChange={setMesRef}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recorrente">Todo mês</SelectItem>
+                  {mesesDisponiveis.map((m) => (
+                    <SelectItem key={m} value={m}>só {mesCurto(m)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Label className="flex items-center gap-1.5">
+                  <ShieldAlert className="h-4 w-4" /> Bloquear ao ultrapassar
+                </Label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {modo === "bloqueio"
+                    ? "Lançamentos que estourem o teto serão recusados ao salvar."
+                    : "Só avisa na tela; nada é impedido."}
+                </p>
+              </div>
+              <Switch
+                checked={modo === "bloqueio"}
+                onCheckedChange={(v) => setModo(v ? "bloqueio" : "aviso")}
+              />
+            </div>
+            {modo === "bloqueio" && (
+              <p className="mt-2 rounded bg-amber-500/10 px-2 py-1.5 text-xs text-amber-700 dark:text-amber-500">
+                Dar baixa em conta já paga continua liberado — o bloqueio só vale para valor e
+                classificação, para não impedir de registrar o que já aconteceu.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Avisar a partir de (% do teto)</Label>
+            <Input
+              type="number"
+              min={1}
+              max={100}
+              value={alertaPct}
+              onChange={(e) => setAlertaPct(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Observação (opcional)</Label>
+            <Input
+              placeholder="Ex.: teto aprovado na reunião de julho"
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar}>Cancelar</Button>
+          <Button onClick={salvar} disabled={salvando}>
+            {salvando ? "Salvando…" : "Salvar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
