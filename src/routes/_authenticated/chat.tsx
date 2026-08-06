@@ -84,6 +84,11 @@ function ChatPage() {
     knownIdsRef.current.add(id);
   };
 
+  // Mensagem renderizada localmente antes da ida ao servidor. Sai da lista
+  // quando a linha real chega pelo Realtime (ou no rollback, se der erro).
+  const isOptimistic = (m: ChatRow) =>
+    typeof m.id === "string" && m.id.startsWith("tmp-");
+
   // Boot
   useEffect(() => {
     let mounted = true;
@@ -134,7 +139,14 @@ function ChatPage() {
             if (p.eventType === "INSERT") {
               if (knownIdsRef.current.has(row.id)) return;
               trackId(row.id);
-              setMessages((prev) => [...prev, row]);
+              setMessages((prev) => [
+                // Substitui a versão otimista pela linha real, sem duplicar.
+                ...prev.filter(
+                  (m) =>
+                    !(isOptimistic(m) && m.role === row.role && m.content === row.content),
+                ),
+                row,
+              ]);
             } else if (p.eventType === "UPDATE") {
               setMessages((prev) =>
                 prev.map((m) => (m.id === row.id ? { ...m, ...row } : m)),
@@ -154,11 +166,36 @@ function ChatPage() {
     async (content: string) => {
       if (!threadId || sending) return;
       setSending(true);
+
+      // A mensagem do usuário aparecia só quando a linha voltava pelo Realtime;
+      // até então a tela ficava em branco, mesmo com o envio dando certo.
+      const tempId = `tmp-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: tempId,
+          role: "user",
+          content,
+          status: "sent",
+          metadata: null,
+          channel: null,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+
+      // Falhou: tira a bolha otimista e devolve o texto ao campo, senão o
+      // usuário perde o que digitou.
+      const rollback = (motivo: string) => {
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        setInput((atual) => atual || content);
+        toast.error(motivo);
+      };
+
       try {
         const { data: sess } = await supabase.auth.getSession();
         const token = sess.session?.access_token;
         if (!token) {
-          toast.error("Sessão expirada — faça login de novo");
+          rollback("Sessão expirada — faça login de novo");
           return;
         }
         const { error } = await supabase.functions.invoke("chat-send-message", {
@@ -168,7 +205,7 @@ function ChatPage() {
         if (error) {
           // A função devolve o motivo real no corpo (ex.: "Lívia está offline
           // — sua VPS não está conectada"). Sem isto vira "non-2xx status code".
-          toast.error(await mensagemErroEdge(error));
+          rollback(await mensagemErroEdge(error));
         }
       } finally {
         setSending(false);
