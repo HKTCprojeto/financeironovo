@@ -39,7 +39,7 @@ Disso decorrem três regras:
    `agent main` — que é o agente das automações de produção. Além disso ele
    configura `hooks.enabled/hooks.token`, que **não existem** nesta versão do
    OpenClaw, e falha em silêncio (`2>/dev/null || warn`). O motivo completo está
-   em [`livia-vps-bridge.md`](livia-vps-bridge.md).
+   em [`livia-vps-bridge.md`](../livia-vps-bridge.md).
 2. **Alinhar antes de cada mudança na VPS.** Mudanças ali afetam outras pessoas,
    não só quem está mexendo.
 3. **Acesso é por senha**, não por chave SSH: `openclaw` → `sudo -i` para root.
@@ -65,7 +65,7 @@ painel /chat → chat-send-message → cloudflared-cfo (quick tunnel)
 ```
 
 O desenho, e **por que** cada peça é assim, está em
-[`livia-vps-bridge.md`](livia-vps-bridge.md). O resumo indispensável:
+[`livia-vps-bridge.md`](../livia-vps-bridge.md). O resumo indispensável:
 
 - O agente **`livia`** é isolado do `main` (workspace próprio, modelo
   `anthropic/claude-haiku-4-5`). O `main` e suas automações não são tocados.
@@ -84,7 +84,7 @@ O desenho, e **por que** cada peça é assim, está em
 
 ## 3. O que foi feito em 2026-08-07 (concluído e verificado)
 
-Script usado: [`scripts/janela-manutencao-vps.sh`](../scripts/janela-manutencao-vps.sh)
+Script usado: [`scripts/janela-manutencao-vps.sh`](../../scripts/janela-manutencao-vps.sh)
 (subcomandos `check` / `fix` / `rollback` / `pre-reboot` / `reboot --confirmo` /
 `pos-reboot`).
 
@@ -326,10 +326,10 @@ Nenhum valor está neste arquivo nem deve ser colado em conversa.
 
 ## 9. Leitura complementar
 
-- [`livia-vps-bridge.md`](livia-vps-bridge.md) — o desenho da integração e **por
+- [`livia-vps-bridge.md`](../livia-vps-bridge.md) — o desenho da integração e **por
   que** cada decisão foi tomada. Leia antes de propor mudar a arquitetura: as
   três decisões não-óbvias (bridge posta a resposta, reescrita de workspace,
   `HOME` isolado) existem para não tocar na produção.
-- [`../scripts/janela-manutencao-vps.sh`](../scripts/janela-manutencao-vps.sh) —
+- [`scripts/janela-manutencao-vps.sh`](../../scripts/janela-manutencao-vps.sh) —
   o script da janela, com o baseline de 07/08 nos comentários.
 - Commit `7eff3a0` — tudo desta janela.
