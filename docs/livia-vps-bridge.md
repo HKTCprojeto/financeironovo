@@ -93,8 +93,50 @@ No `bridge.log`, a sequência de um turn saudável é `dispatch run_id=panel_…
   de conversa nativa) ou falar direto com o gateway.
 - `heartbeat.sh` trata HTTP 204 como anomalia no log (a função `heartbeat`
   responde 204). Cosmético.
-- Mission Control / dashboard remoto seguem em 502: a regra de ingress do túnel
-  de produção aponta `openclaw.hktcstore.com.br` para `http://100.110.4.56:18789`
-  (IP tailscale da própria máquina), mas o gateway escuta só em loopback. Fix =
-  trocar por `127.0.0.1:18789` no `/etc/cloudflared/config.yml` — **arquivo de
-  produção, exige alinhamento antes.**
+- Porta 3978 (`/api/messages`, bot do Teams): a regra de ingress existe mas
+  **nenhum processo da máquina escuta nessa porta** e nenhuma unit systemd a
+  menciona. Regra órfã — decidir se remove ou se o serviço volta.
+- Os dois arquivos `20260806000000_*` nasceram com o mesmo número de versão; o
+  do realtime foi renumerado para `20260806010000` porque o histórico de
+  migrations usa a versão como chave única. Conferir isso ao criar migrations
+  no mesmo dia.
+
+## Janela de manutenção de 2026-08-07
+
+`scripts/janela-manutencao-vps.sh` (subcomandos `check`/`fix`/`rollback`/
+`pre-reboot`/`reboot --confirmo`/`pos-reboot`). Instalar na VPS por **linha
+única base64** — multi-linha embola no bracketed paste. O `fix` mede as 5 rotas
+do túnel antes e depois, faz backup datado, valida com `cloudflared tunnel
+ingress validate` e **restaura sozinho** se alguma rota saudável virar 5xx.
+
+Três coisas mudaram na VPS:
+
+1. **Ingress corrigido** — o catch-all de `openclaw.hktcstore.com.br` apontava
+   `100.110.4.56:18789` (IP tailscale) e o gateway só escuta loopback. Trocado
+   por `127.0.0.1:18789`: rota externa **502 → 200**. Backup em
+   `/etc/cloudflared/config.yml.bak-20260807-104852`.
+2. **Colisão de porta eliminada** — três units disputavam a 18789 no boot:
+   `openclaw-gateway` do sistema (a que roda), `openclaw-gateway` de usuário e
+   `openclaw-node` de usuário (v2026.4.8, parado desde 22/06). As duas de
+   usuário foram desabilitadas (`systemctl --user disable`; desfazer =
+   `enable`). Sem isso o reboot era uma corrida: se o gateway perdesse a porta,
+   Lívia e Mission Control caíam — e o motivo seria quase impossível de achar
+   depois.
+3. **Reboot testado** (o uptime era de 134 dias). Tudo voltou sozinho, as 5
+   rotas idênticas, e o quick tunnel da Lívia trocou de URL com o heartbeat
+   corrigindo sozinho — a autocorreção descrita acima deixou de ser teoria.
+
+`supervisora-bridge` (3001) e `hermes-gateway` (8642) são units **de usuário** e
+só voltam porque `Linger=yes` no usuário `openclaw`. Conferir antes de qualquer
+reboot futuro, junto com o que ocupa cada porta e o que está `enabled` mas
+parado.
+
+## O dashboard não usa o mesmo endereço da Lívia
+
+`instances.ingress_url` guarda o endereço do **bridge** e é reescrito pelo
+`heartbeat` a cada 4 min. O Mission Control e o "Abrir OpenClaw" precisam do
+**gateway** — enquanto liam o mesmo campo, abriam no bridge e recebiam
+`{"error":"not found"}`. Desde `20260807000000_openclaw_dashboard_url.sql` existe
+a coluna `instances.openclaw_dashboard_url`, que o heartbeat não toca;
+`openclaw-dashboard-url` e `openclaw-ws-url` a usam com fallback para
+`ingress_url`.

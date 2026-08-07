@@ -41,12 +41,18 @@ Deno.serve(async (req: Request) => {
   const supabase = adminClient();
   const { data: instance } = await supabase
     .from("instances")
-    .select("ingress_url, openclaw_dashboard_token, last_heartbeat")
+    .select(
+      "ingress_url, openclaw_dashboard_url, openclaw_dashboard_token, last_heartbeat",
+    )
     .order("last_heartbeat", { ascending: false, nullsFirst: false })
     .limit(1)
     .maybeSingle();
 
-  if (!instance?.ingress_url || !instance?.openclaw_dashboard_token) {
+  // O WebSocket é do gateway, não do bridge da Lívia — mesmo motivo do
+  // openclaw-dashboard-url. Fallback só para instalação antiga.
+  const base = instance?.openclaw_dashboard_url ?? instance?.ingress_url;
+
+  if (!base || !instance?.openclaw_dashboard_token) {
     return errorResponse(
       "Gateway OpenClaw indisponível — VPS precisa atualizar (rode setup.sh)",
       422,
@@ -64,7 +70,7 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  const wsUrl = instance.ingress_url
+  const wsUrl = base
     .replace(/^https:\/\//, "wss://")
     .replace(/^http:\/\//, "ws://")
     .replace(/\/$/, "") + "/";

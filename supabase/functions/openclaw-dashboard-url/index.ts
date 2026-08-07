@@ -46,18 +46,23 @@ Deno.serve(async (req: Request) => {
   const supabase = adminClient();
   const { data: instance } = await supabase
     .from("instances")
-    .select("ingress_url, openclaw_dashboard_token")
+    .select("ingress_url, openclaw_dashboard_url, openclaw_dashboard_token")
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (!instance?.ingress_url || !instance?.openclaw_dashboard_token) {
+  // `ingress_url` aponta para o bridge da Lívia (e o heartbeat o reescreve a
+  // cada 4 min); o dashboard mora no gateway. Só cai no fallback em instalação
+  // antiga, sem a coluna preenchida.
+  const base = instance?.openclaw_dashboard_url ?? instance?.ingress_url;
+
+  if (!base || !instance?.openclaw_dashboard_token) {
     return errorResponse(
       "Dashboard do OpenClaw indisponível — VPS precisa atualizar (rode setup.sh novamente)",
       422,
     );
   }
 
-  const url = `${instance.ingress_url.replace(/\/$/, "")}/#token=${instance.openclaw_dashboard_token}`;
+  const url = `${base.replace(/\/$/, "")}/#token=${instance.openclaw_dashboard_token}`;
   return jsonResponse({ url });
 });

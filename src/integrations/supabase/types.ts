@@ -526,6 +526,7 @@ export type Database = {
           ingress_url: string | null
           last_heartbeat: string | null
           openclaw_dashboard_token: string | null
+          openclaw_dashboard_url: string | null
           openclaw_version: string | null
           status: string
           system_prompt: string | null
@@ -540,6 +541,7 @@ export type Database = {
           ingress_url?: string | null
           last_heartbeat?: string | null
           openclaw_dashboard_token?: string | null
+          openclaw_dashboard_url?: string | null
           openclaw_version?: string | null
           status?: string
           system_prompt?: string | null
@@ -554,6 +556,7 @@ export type Database = {
           ingress_url?: string | null
           last_heartbeat?: string | null
           openclaw_dashboard_token?: string | null
+          openclaw_dashboard_url?: string | null
           openclaw_version?: string | null
           status?: string
           system_prompt?: string | null

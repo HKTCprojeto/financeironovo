@@ -1,0 +1,3 @@
+# Scripts de shell rodam no Linux (VPS). Com fim de linha do Windows o bash
+# quebra com erros do tipo "$'\r': command not found".
+*.sh text eol=lf
